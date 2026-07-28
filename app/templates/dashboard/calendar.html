@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block page_title %}Event Calendar{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div id='calendar'></div>
+</div>
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            events: '/api/events/calendar',
+            eventColor: 'var(--primary-color)',
+            height: 'auto'
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}

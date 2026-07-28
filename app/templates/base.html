@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Event Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        {% if current_user.is_authenticated %}
+        <aside class="sidebar">
+            <div class="sidebar-header" style="display: flex; align-items: center; gap: 0.75rem;">
+                <img src="{{ url_for('static', filename='images/gmu_logo.png') }}" alt="GM University" style="height: 40px; object-fit: contain;">
+                <h2 style="font-size: 1.2rem; line-height: 1.1;">GM University</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.index') }}" class="nav-link">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('events.create') }}" class="nav-link">
+                        <i class="fas fa-plus"></i> New Proposal
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.calendar') }}" class="nav-link">
+                        <i class="fas fa-calendar-alt"></i> Calendar
+                    </a>
+                </li>
+                {% if current_user.role.name == 'Admin' %}
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.manage_users') }}" class="nav-link">
+                        <i class="fas fa-users"></i> Users
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h3>{% block page_title %}{% endblock %}</h3>
+                </div>
+                <div class="topbar-actions" style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="text-align: right; line-height: 1.2; border-right: 1px solid var(--border-color); padding-right: 1rem;">
+                        <span style="display: block; font-weight: 600; color: var(--text-primary); text-transform: capitalize;">{{ current_user.username }}</span>
+                        <span style="display: block; font-size: 0.75rem; color: var(--primary);">{{ current_user.role.name }}</span>
+                    </div>
+                    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">Logout</a>
+                </div>
+            </header>
+            <div class="content-area">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+        {% else %}
+            <div class="full-page" style="width: 100%; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+                {% block auth_content %}{% endblock %}
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

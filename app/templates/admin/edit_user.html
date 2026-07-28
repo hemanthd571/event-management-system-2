@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block page_title %}Edit User: {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+        
+        <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required {% if user.username == 'admin' %}readonly{% endif %}>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">New Password (leave blank to keep current)</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Enter new password to change">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="role_id">Role</label>
+            <select class="form-control" id="role_id" name="role_id" required {% if user.username == 'admin' %}disabled{% endif %}>
+                {% for role in roles %}
+                <option value="{{ role.id }}" {% if user.role_id == role.id %}selected{% endif %}>{{ role.name }}</option>
+                {% endfor %}
+            </select>
+            {% if user.username == 'admin' %}
+            <input type="hidden" name="role_id" value="{{ user.role_id }}">
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">Admin role cannot be changed.</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="department_id">Department (Optional for top level admins)</label>
+            <select class="form-control" id="department_id" name="department_id">
+                <option value="">-- None --</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if user.department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+            <a href="{{ url_for('admin.manage_users') }}" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
