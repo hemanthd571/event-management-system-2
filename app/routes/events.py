@@ -133,23 +133,62 @@ def create():
         db.session.add(new_event)
         db.session.flush() # Get new_event.id
 
-        # Create Approval Workflow
-        approvals = []
+        # Create Approval Workflow with Auto-Approval Logic
+        HIERARCHY = {
+            'Student/Organizer': 0,
+            'Faculty': 1,
+            'HOD': 2,
+            'Director': 3,
+            'Pro VC': 4,
+            'VC': 5,
+            'Admin': 99
+        }
+        user_level = HIERARCHY.get(current_user.role.name, 0)
+        
+        roles_to_create = []
         if new_event.event_type == 'University Level':
-            # Faculty -> HOD -> Director -> Pro VC -> VC
-            approvals.append(Approval(event_id=new_event.id, required_role='Faculty', level=1, status='Pending'))
-            approvals.append(Approval(event_id=new_event.id, required_role='HOD', level=2, status='Pending'))
-            approvals.append(Approval(event_id=new_event.id, required_role='Director', level=3, status='Pending'))
-            approvals.append(Approval(event_id=new_event.id, required_role='Pro VC', level=4, status='Pending'))
-            approvals.append(Approval(event_id=new_event.id, required_role='VC', level=5, status='Pending'))
-            new_event.status = 'Pending Faculty Approval'
+            roles_to_create = ['Faculty', 'HOD', 'Director', 'Pro VC', 'VC']
         else:
-            # Department Level: Faculty -> HOD
-            approvals.append(Approval(event_id=new_event.id, required_role='Faculty', level=1, status='Pending'))
-            approvals.append(Approval(event_id=new_event.id, required_role='HOD', level=2, status='Pending'))
-            new_event.status = 'Pending Faculty Approval'
+            roles_to_create = ['Faculty', 'HOD']
+
+        approvals = []
+        for i, required_role in enumerate(roles_to_create):
+            req_level = HIERARCHY.get(required_role, 0)
+            status = 'Pending'
+            comments = None
+            action_date = None
+            approver_id = None
+            
+            # Auto-approve if the submitter is at or above this role level
+            if user_level >= req_level:
+                status = 'Approved'
+                comments = f'Auto-approved by system (Submitter is {current_user.role.name})'
+                action_date = datetime.utcnow()
+                approver_id = current_user.id
+                
+            approvals.append(Approval(
+                event_id=new_event.id, 
+                required_role=required_role, 
+                level=i+1, 
+                status=status,
+                comments=comments,
+                action_date=action_date,
+                approver_id=approver_id
+            ))
 
         db.session.bulk_save_objects(approvals)
+        
+        # Determine the overall event status by finding the first pending approval
+        next_pending_role = None
+        for app_obj in approvals:
+            if app_obj.status == 'Pending':
+                next_pending_role = app_obj.required_role
+                break
+                
+        if next_pending_role:
+            new_event.status = f'Pending {next_pending_role} Approval'
+        else:
+            new_event.status = 'Approved'
         
         # Notification for organizer
         notif = Notification(user_id=current_user.id, message=f"Your proposal '{new_event.title}' has been submitted.")
@@ -158,8 +197,9 @@ def create():
         # Email to organizer
         send_email_notification(current_user.email, "Proposal Submitted", f"Your event proposal '{new_event.title}' was submitted successfully.")
 
-        # Notify the first approver
-        notify_approvers(new_event, approvals[0].required_role)
+        # Notify the first actual pending approver (if any)
+        if next_pending_role:
+            notify_approvers(new_event, next_pending_role)
 
         db.session.commit()
         flash('Event proposal submitted successfully!', 'success')
