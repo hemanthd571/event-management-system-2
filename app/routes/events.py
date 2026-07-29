@@ -122,17 +122,25 @@ def create():
                 flash(f'A University Level event ({blocking_univ_event.title}) is already scheduled for this date. No other events can be booked on this day.', 'danger')
                 return redirect(url_for('events.create'))
 
+            # Apply a 30-minute buffer for cleaning/setup between events
+            from datetime import datetime, timedelta
+            start_dt = datetime.combine(event_date, start_time)
+            end_dt = datetime.combine(event_date, end_time)
+            
+            start_time_buf = (start_dt - timedelta(minutes=30)).time()
+            end_time_buf = (end_dt + timedelta(minutes=30)).time()
+
             # Check for venue overlaps
             overlapping_events = Event.query.filter(
                 Event.event_date == event_date,
                 Event.venue_id == venue_id,
                 Event.status != 'Rejected',
-                Event.start_time < end_time,
-                Event.end_time > start_time
+                Event.start_time < end_time_buf,
+                Event.end_time > start_time_buf
             ).first()
             
             if overlapping_events:
-                flash('This venue is already booked for the selected time slot. Please choose a different time or venue.', 'danger')
+                flash('This venue is already booked for the selected time slot (including a mandatory 30-minute setup/cleaning buffer). Please choose a different time or venue.', 'danger')
                 return redirect(url_for('events.create'))
                 
         from app.models import Venue
