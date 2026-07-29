@@ -61,8 +61,14 @@ def send_email_notification(to_email, subject, body):
 def create():
     if request.method == 'POST':
         # Auto generate Event ID
+        current_year = datetime.now().year
         event_count = Event.query.count() + 1
-        event_id_str = f"EVT-{datetime.now().year}-{event_count:03d}"
+        while True:
+            event_id_str = f"EVT-{current_year}-{event_count:03d}"
+            existing_event = Event.query.filter_by(event_id=event_id_str).first()
+            if not existing_event:
+                break
+            event_count += 1
         
         # Save files
         proposal_pdf = request.files.get('proposal_pdf')
