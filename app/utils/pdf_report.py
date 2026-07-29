@@ -87,8 +87,20 @@ def generate_approval_pdf(event, approvals):
     # Define background drawing function
     def draw_background(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(colors.HexColor('#F4F6F8')) # UI light background
+        # Use a distinct GMU Gold tinted background instead of plain white/grey
+        canvas.setFillColor(colors.HexColor('#F7EBC6')) 
         canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1, stroke=0)
+        
+        # Add a border to the page for a more certificate-like appearance using Betel Nut Brown
+        canvas.setStrokeColor(colors.HexColor('#5C2C16'))
+        canvas.setLineWidth(3)
+        canvas.rect(20, 20, doc.pagesize[0]-40, doc.pagesize[1]-40, fill=0, stroke=1)
+        
+        # Inner border
+        canvas.setStrokeColor(colors.HexColor('#E3B559'))
+        canvas.setLineWidth(1)
+        canvas.rect(25, 25, doc.pagesize[0]-50, doc.pagesize[1]-50, fill=0, stroke=1)
+        
         canvas.restoreState()
 
     # Build PDF
