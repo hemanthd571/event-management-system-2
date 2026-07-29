@@ -23,7 +23,7 @@
         </div>
         <div class="stat-details">
             <h3>Total Budget</h3>
-            <p class="value">${{ "{:,.2f}".format(total_budget) }}</p>
+            <p class="value">₹{{ "{:,.2f}".format(total_budget) }}</p>
         </div>
     </div>
     <div class="card stat-card">
@@ -202,7 +202,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Approved Budget ($)',
+                    label: 'Approved Budget (₹)',
                     data: data,
                     backgroundColor: [
                         'rgba(92, 44, 22, 0.8)',   /* Betel Nut Brown */

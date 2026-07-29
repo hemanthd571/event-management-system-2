@@ -39,7 +39,7 @@
             <div><strong>Date:</strong> {{ event.event_date }}</div>
             <div><strong>Time:</strong> {{ event.start_time.strftime('%I:%M %p') if event.start_time else event.event_time }} {% if event.end_time %}- {{ event.end_time.strftime('%I:%M %p') }}{% endif %}</div>
             <div><strong>Venue:</strong> {{ event.venue_obj.name if event.venue_obj else event.venue }}</div>
-            <div><strong>Budget:</strong> ${{ event.budget }}</div>
+            <div><strong>Budget:</strong> ₹{{ event.budget }}</div>
         </div>
 
         <h3 style="margin-top: 1.5rem;">Objectives</h3>
