@@ -97,11 +97,39 @@ def create():
                 Event.status != 'Rejected',
                 Event.start_time < end_time,
                 Event.end_time > start_time
-            ).first()
+            ).all()
             
             if overlapping_events:
-                flash('This venue is already booked for the selected time slot. Please choose a different time or venue.', 'danger')
-                return redirect(url_for('events.create'))
+                new_event_type = request.form.get('event_type')
+                
+                # Check if University level can override Department level
+                can_override = False
+                if new_event_type == 'University Level':
+                    can_override = all(ev.event_type == 'Department Level' for ev in overlapping_events)
+                
+                if can_override:
+                    from app.models import User
+                    for ev in overlapping_events:
+                        ev.status = 'Rejected'
+                        # Notify the original organizer
+                        notif = Notification(
+                            user_id=ev.organizer_id, 
+                            message=f"Your event '{ev.title}' was cancelled due to a priority University Level event booking."
+                        )
+                        db.session.add(notif)
+                        
+                        org_user = User.query.get(ev.organizer_id)
+                        if org_user:
+                            send_email_notification(
+                                org_user.email,
+                                "Event Booking Cancelled (Priority Override)",
+                                f"Unfortunately, your event '{ev.title}' has been cancelled. The venue was overridden by a priority University Level event. Please propose a new time or venue."
+                            )
+                    # Note: We must flush to save the status changes before checking again if needed,
+                    # but since we proceed to create the new event, we just let the commit handle it later.
+                else:
+                    flash('This venue is already booked for the selected time slot. Please choose a different time or venue.', 'danger')
+                    return redirect(url_for('events.create'))
                 
         from app.models import Venue
         venue_obj = Venue.query.get(venue_id) if venue_id else None
