@@ -123,7 +123,7 @@ def create():
                 return redirect(url_for('events.create'))
 
             # Apply a 1-hour buffer for cleaning/setup between events
-            from datetime import datetime, timedelta
+            from datetime import timedelta
             start_dt = datetime.combine(event_date, start_time)
             end_dt = datetime.combine(event_date, end_time)
             
