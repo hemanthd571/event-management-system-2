@@ -60,7 +60,7 @@ def generate_approval_pdf(event, approvals):
     Story.append(Spacer(1, 24))
 
     # QR Code
-    qr = qrcode.QRCode(version=1, box_size=4, border=2)
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
     from flask import url_for
     try:
         verify_url = url_for('events.view', event_id=event.id, _external=True)
@@ -77,7 +77,7 @@ def generate_approval_pdf(event, approvals):
     
     Story.append(Paragraph("Verification QR Code:", styles['Heading3']))
     Story.append(Spacer(1, 6))
-    Story.append(Image(qr_buffer, width=100, height=100, hAlign='LEFT'))
+    Story.append(Image(qr_buffer, width=120, height=120, hAlign='LEFT'))
 
     # Build PDF
     doc.build(Story)
