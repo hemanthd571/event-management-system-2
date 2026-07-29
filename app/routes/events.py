@@ -111,19 +111,16 @@ def create():
             return redirect(url_for('events.create'))
 
         if venue_id and start_time and end_time:
-            new_event_type = request.form.get('event_type')
+            # If a University Level event is on this date, block ANY new bookings
+            blocking_univ_event = Event.query.filter(
+                Event.event_date == event_date,
+                Event.event_type == 'University Level',
+                Event.status != 'Rejected'
+            ).first()
             
-            # Only block Department Level events if a University Level event is on this date
-            if new_event_type != 'University Level':
-                blocking_univ_event = Event.query.filter(
-                    Event.event_date == event_date,
-                    Event.event_type == 'University Level',
-                    Event.status != 'Rejected'
-                ).first()
-                
-                if blocking_univ_event:
-                    flash(f'A University Level event ({blocking_univ_event.title}) is scheduled for this date. No department events can be booked on this day.', 'danger')
-                    return redirect(url_for('events.create'))
+            if blocking_univ_event:
+                flash(f'A University Level event ({blocking_univ_event.title}) is scheduled for this date. No other events (Department or University level) can be booked on this day.', 'danger')
+                return redirect(url_for('events.create'))
 
             # Apply a 1-hour buffer for cleaning/setup between events
             from datetime import datetime, timedelta
