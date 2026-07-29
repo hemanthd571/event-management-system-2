@@ -15,7 +15,7 @@
     <div style="position: absolute; right: -50px; top: -100px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; pointer-events: none; z-index: 1;"></div>
     <div style="position: absolute; right: 150px; bottom: -80px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; pointer-events: none; z-index: 1;"></div>
 </div>
-{% if current_user.role.name != 'Student/Organizer' %}
+{% if current_user.role.name == 'Admin' %}
 <div class="dashboard-stats">
     <div class="card stat-card">
         <div class="stat-icon" style="color: var(--primary-color); background-color: rgba(15, 23, 42, 0.1);">
@@ -146,7 +146,7 @@
 </div>
 
 <!-- Analytics Section -->
-{% if current_user.role.name != 'Student/Organizer' %}
+{% if current_user.role.name == 'Admin' %}
 <div class="dashboard-stats" style="grid-template-columns: 1fr; margin-top: 1.5rem;">
     <div class="card">
         <h3 style="margin-top: 0;">Budget by Department</h3>
