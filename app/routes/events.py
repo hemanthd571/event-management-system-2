@@ -113,19 +113,8 @@ def create():
         if venue_id and start_time and end_time:
             new_event_type = request.form.get('event_type')
             
-            # 1. If creating a University Level event, the ENTIRE DAY must be completely free
-            if new_event_type == 'University Level':
-                any_event_on_date = Event.query.filter(
-                    Event.event_date == event_date,
-                    Event.status != 'Rejected'
-                ).first()
-                
-                if any_event_on_date:
-                    flash(f'Cannot schedule a University Level event on this date because another event ({any_event_on_date.title}) is already scheduled. The entire day must be free.', 'danger')
-                    return redirect(url_for('events.create'))
-            
-            # 2. If creating a Department Level event, ensure no University Level event is on this date
-            else:
+            # Only block Department Level events if a University Level event is on this date
+            if new_event_type != 'University Level':
                 blocking_univ_event = Event.query.filter(
                     Event.event_date == event_date,
                     Event.event_type == 'University Level',
@@ -133,7 +122,7 @@ def create():
                 ).first()
                 
                 if blocking_univ_event:
-                    flash(f'A University Level event ({blocking_univ_event.title}) is scheduled for this date. No other events can be booked on this day.', 'danger')
+                    flash(f'A University Level event ({blocking_univ_event.title}) is scheduled for this date. No department events can be booked on this day.', 'danger')
                     return redirect(url_for('events.create'))
 
             # Apply a 1-hour buffer for cleaning/setup between events
