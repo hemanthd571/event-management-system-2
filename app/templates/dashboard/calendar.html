@@ -1,28 +1,48 @@
 {% extends "base.html" %}
 
-{% block page_title %}Event Calendar{% endblock %}
+{% block page_title %}Event Calendars{% endblock %}
 
 {% block content %}
+<div class="card mb-4">
+    <h2>Department Level Events</h2>
+    <div id='calendar-dept'></div>
+</div>
+
 <div class="card">
-    <div id='calendar'></div>
+    <h2>University Level Events</h2>
+    <div id='calendar-univ'></div>
 </div>
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
+        var deptCalendarEl = document.getElementById('calendar-dept');
+        var deptCalendar = new FullCalendar.Calendar(deptCalendarEl, {
             initialView: 'dayGridMonth',
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek'
             },
-            events: '/api/events/calendar',
+            events: '/api/events/calendar?type=Department Level',
             eventColor: 'var(--primary-color)',
             height: 'auto'
         });
-        calendar.render();
+        deptCalendar.render();
+
+        var univCalendarEl = document.getElementById('calendar-univ');
+        var univCalendar = new FullCalendar.Calendar(univCalendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            events: '/api/events/calendar?type=University Level',
+            eventColor: '#c0392b', // Different color for University level
+            height: 'auto'
+        });
+        univCalendar.render();
     });
 </script>
 {% endblock %}

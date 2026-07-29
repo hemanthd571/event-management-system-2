@@ -74,8 +74,15 @@ def calendar():
 @dashboard_bp.route('/api/events/calendar')
 @login_required
 def api_calendar_events():
+    event_type = request.args.get('type')
+    
     # Only show approved events on the calendar
-    approved_events = Event.query.filter_by(status='Approved').all()
+    query = Event.query.filter_by(status='Approved')
+    
+    if event_type:
+        query = query.filter_by(event_type=event_type)
+        
+    approved_events = query.all()
     events_data = []
     for event in approved_events:
         events_data.append({
