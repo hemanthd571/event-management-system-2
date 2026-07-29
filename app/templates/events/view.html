@@ -9,12 +9,23 @@
     <div class="card" style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
             <h2 style="margin-top: 0;">{{ event.title }}</h2>
-            <span class="badge 
-                {% if event.status == 'Approved' %}badge-success
-                {% elif event.status == 'Rejected' %}badge-danger
-                {% else %}badge-warning{% endif %}">
-                {{ event.status }}
-            </span>
+            <div class="approval-flow" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                {% for app in approvals %}
+                    <span class="badge 
+                        {% if app.status == 'Approved' %}badge-success
+                        {% elif app.status == 'Rejected' %}badge-danger
+                        {% elif app.status == 'Pending' %}
+                            {% if current_approval and current_approval.id == app.id %}badge-warning
+                            {% else %}badge-info{% endif %}
+                        {% else %}badge-warning{% endif %}"
+                        style="{% if app.status == 'Pending' and current_approval and current_approval.id != app.id %}opacity: 0.6;{% endif %}">
+                        {{ app.required_role }}
+                    </span>
+                    {% if not loop.last %}
+                        <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 0.8rem;"></i>
+                    {% endif %}
+                {% endfor %}
+            </div>
             <span class="badge badge-info">{{ event.event_type }}</span>
         </div>
         <div>
