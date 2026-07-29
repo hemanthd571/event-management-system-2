@@ -10,7 +10,7 @@ from app.utils.pdf_report import generate_approval_pdf
 from flask import make_response
 from flask_mail import Message
 from app import mail
-
+from threading import Thread
 events_bp = Blueprint('events', __name__, url_prefix='/events')
 
 def notify_approvers(event, required_role):
@@ -41,18 +41,33 @@ def save_file(file):
     file.save(filepath)
     return unique_filename
 
+def send_async_email(app, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+            print(f"\n--- ASYNC EMAIL SENT SUCCESSFULLY ---")
+            print(f"TO: {msg.recipients}")
+            print(f"SUBJECT: {msg.subject}")
+            print("------------------------------------\n")
+        except Exception as e:
+            print(f"Async Email failed: {e}")
+
 def send_email_notification(to_email, subject, body):
     try:
+        if not current_app.config.get('MAIL_USERNAME'):
+            print(f"\n--- EMAIL SIMULATION (NOT CONFIGURED) ---")
+            print(f"TO: {to_email}")
+            print(f"SUBJECT: {subject}")
+            print("-----------------------------------------\n")
+            return
+            
         msg = Message(subject, recipients=[to_email])
         msg.body = body
         
-        # Actually send through SMTP
-        mail.send(msg) 
+        # Send in background thread to prevent Gunicorn timeout
+        app = current_app._get_current_object()
+        Thread(target=send_async_email, args=(app, msg)).start()
         
-        print(f"\n--- REAL EMAIL SENT SUCCESSFULLY ---")
-        print(f"TO: {to_email}")
-        print(f"SUBJECT: {subject}")
-        print("------------------------------------\n")
     except Exception as e:
         print(f"Email failed to process for {to_email}: {e}")
 
