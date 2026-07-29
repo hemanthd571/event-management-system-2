@@ -65,6 +65,40 @@
 </div>
 {% endif %}
 
+{% if pending_my_approval is defined and pending_my_approval|length > 0 %}
+<div class="card" style="border-left: 4px solid var(--warning); margin-bottom: 2rem;">
+    <h3 style="margin-top: 0; color: var(--warning);">Action Required: Pending My Approval</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                <th style="padding: 1rem 0;">Event ID</th>
+                <th style="padding: 1rem 0;">Title</th>
+                <th style="padding: 1rem 0;">Type</th>
+                <th style="padding: 1rem 0;">Date</th>
+                <th style="padding: 1rem 0;">Status</th>
+                <th style="padding: 1rem 0;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in pending_my_approval %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 1rem 0;">{{ event.event_id }}</td>
+                <td style="padding: 1rem 0;">{{ event.title }}</td>
+                <td style="padding: 1rem 0;">{{ event.event_type }}</td>
+                <td style="padding: 1rem 0;">{{ event.event_date }}</td>
+                <td style="padding: 1rem 0;">
+                    <span class="badge badge-warning">{{ event.status }}</span>
+                </td>
+                <td style="padding: 1rem 0;">
+                    <a href="{{ url_for('events.view', event_id=event.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Review & Approve</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3 style="margin: 0;">{% if current_user.role.name == 'Student/Organizer' %}My Events{% else %}All Events{% endif %}</h3>

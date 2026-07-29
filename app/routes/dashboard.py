@@ -26,6 +26,30 @@ def index():
         events_query = Event.query.filter_by(organizer_id=current_user.id)
     else:
         events_query = Event.query
+
+    pending_my_approval = []
+    if current_user.role.name in ['Faculty', 'HOD', 'Director', 'Pro VC', 'VC', 'Admin']:
+        candidate_events = Event.query.filter(Event.status.notin_(['Approved', 'Rejected'])).all()
+        for event in candidate_events:
+            sorted_approvals = sorted(event.approvals, key=lambda a: a.level)
+            current_app = None
+            
+            if current_user.is_admin():
+                for app in sorted_approvals:
+                    if app.status in ['Pending', 'Returned for Correction']:
+                        current_app = app
+                        break
+            else:
+                for app in sorted_approvals:
+                    if app.status in ['Pending', 'Returned for Correction'] and app.required_role == current_user.role.name:
+                        current_app = app
+                        break
+            
+            if current_app:
+                if current_user.is_admin():
+                    pending_my_approval.append(event)
+                elif current_user.role.name == current_app.required_role:
+                    pending_my_approval.append(event)
         
     context = {
         'total_events': Event.query.count(),
@@ -33,6 +57,7 @@ def index():
         'approved_events': Event.query.filter_by(status='Approved').count(),
         'rejected_events': Event.query.filter_by(status='Rejected').count(),
         'all_events': events_query.order_by(Event.created_at.desc()).all(),
+        'pending_my_approval': pending_my_approval,
         'total_budget': total_budget,
         'chart_labels': chart_labels,
         'chart_data': chart_data

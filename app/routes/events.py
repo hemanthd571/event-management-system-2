@@ -180,17 +180,22 @@ def view(event_id):
     
     # Determine which approval is currently active
     current_approval = None
-    for app in approvals:
-        if app.status in ['Pending', 'Returned for Correction']:
-            current_approval = app
-            break
+    if current_user.is_admin():
+        for app in approvals:
+            if app.status in ['Pending', 'Returned for Correction']:
+                current_approval = app
+                break
+    else:
+        for app in approvals:
+            if app.required_role == current_user.role.name and app.status in ['Pending', 'Returned for Correction']:
+                current_approval = app
+                break
 
     can_approve = False
-    if current_approval and current_user.role.name == current_approval.required_role:
-        if current_user.role.name in ['Faculty', 'HOD']:
-            if current_user.department_id == event.department_id:
-                can_approve = True
-        else:
+    if current_approval:
+        if current_user.is_admin():
+            can_approve = True
+        elif current_user.role.name == current_approval.required_role:
             can_approve = True
 
     # Handle approval action
@@ -208,7 +213,13 @@ def view(event_id):
         elif action == 'Returned for Correction':
             event.status = 'Returned for Correction'
         elif action == 'Approved':
-            next_app = Approval.query.filter_by(event_id=event.id, level=current_approval.level + 1).first()
+            # Check if there's any pending approval left in the hierarchy
+            next_app = None
+            for app in approvals: # approvals is already ordered by level
+                if app.status in ['Pending', 'Returned for Correction']:
+                    next_app = app
+                    break
+                    
             if next_app:
                 event.status = f"Pending {next_app.required_role} Approval"
                 # Notify the next approver in line

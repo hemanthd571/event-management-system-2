@@ -518,3 +518,84 @@ tbody tr:hover {
   font-weight: 800;
   letter-spacing: -0.5px;
 }
+
+/* Responsive Design (Mobile & Tablet) */
+@media (max-width: 992px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: auto;
+    height: auto;
+    margin: 1rem;
+    position: static;
+    padding: 1rem;
+  }
+
+  .nav-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .nav-item {
+    padding: 0;
+  }
+
+  .nav-link {
+    margin-bottom: 0;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .topbar {
+    margin: 0 1rem;
+    padding: 1rem;
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .content-area {
+    padding: 1rem;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .topbar-actions > div {
+    text-align: left !important;
+    border-right: none !important;
+    padding-right: 0 !important;
+  }
+  
+  .card {
+    padding: 1rem;
+  }
+
+  .card[style*="display: flex"] {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
