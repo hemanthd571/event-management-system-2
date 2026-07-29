@@ -111,16 +111,30 @@ def create():
             return redirect(url_for('events.create'))
 
         if venue_id and start_time and end_time:
-            # Check if date is globally locked by an approved University Level event
-            blocking_univ_event = Event.query.filter_by(
-                event_date=event_date,
-                event_type='University Level',
-                status='Approved'
-            ).first()
-
-            if blocking_univ_event:
-                flash(f'A University Level event ({blocking_univ_event.title}) is already scheduled for this date. No other events can be booked on this day.', 'danger')
-                return redirect(url_for('events.create'))
+            new_event_type = request.form.get('event_type')
+            
+            # 1. If creating a University Level event, the ENTIRE DAY must be completely free
+            if new_event_type == 'University Level':
+                any_event_on_date = Event.query.filter(
+                    Event.event_date == event_date,
+                    Event.status != 'Rejected'
+                ).first()
+                
+                if any_event_on_date:
+                    flash(f'Cannot schedule a University Level event on this date because another event ({any_event_on_date.title}) is already scheduled. The entire day must be free.', 'danger')
+                    return redirect(url_for('events.create'))
+            
+            # 2. If creating a Department Level event, ensure no University Level event is on this date
+            else:
+                blocking_univ_event = Event.query.filter(
+                    Event.event_date == event_date,
+                    Event.event_type == 'University Level',
+                    Event.status != 'Rejected'
+                ).first()
+                
+                if blocking_univ_event:
+                    flash(f'A University Level event ({blocking_univ_event.title}) is scheduled for this date. No other events can be booked on this day.', 'danger')
+                    return redirect(url_for('events.create'))
 
             # Apply a 1-hour buffer for cleaning/setup between events
             from datetime import datetime, timedelta
