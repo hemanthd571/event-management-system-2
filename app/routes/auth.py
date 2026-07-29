@@ -9,8 +9,8 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
