@@ -87,20 +87,21 @@
                 <td style="padding: 1rem 0;">{{ event.event_type }}</td>
                 <td style="padding: 1rem 0;">{{ event.event_date }}</td>
                 <td style="padding: 1rem 0;">
-                    <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
-                        {% set sorted_apps = event.approvals|sort(attribute='level') %}
+                    <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                        {% set sorted_apps = event.approvals|list|sort(attribute='level') %}
                         {% for app in sorted_apps %}
-                            <span class="badge 
-                                {% if app.status == 'Approved' %}badge-success
-                                {% elif app.status == 'Rejected' %}badge-danger
-                                {% elif app.status == 'Pending' %}badge-warning
-                                {% else %}badge-info{% endif %}"
-                                style="font-size: 0.65rem; padding: 0.2rem 0.4rem;" title="{{ app.status }}">
-                                {{ app.required_role }}
-                            </span>
-                            {% if not loop.last %}
-                                <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 0.6rem;"></i>
-                            {% endif %}
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <span style="font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.4rem; border-radius: 4px; white-space: nowrap;
+                                    {% if app.status == 'Approved' %}background: rgba(16, 185, 129, 0.15); color: #047857;
+                                    {% elif app.status == 'Rejected' %}background: rgba(239, 68, 68, 0.15); color: #b91c1c;
+                                    {% elif app.status == 'Pending' %}background: rgba(245, 158, 11, 0.15); color: #b45309;
+                                    {% else %}background: #f1f5f9; color: #64748b;{% endif %}" title="{{ app.status }}">
+                                    {{ app.required_role }}
+                                </span>
+                                {% if not loop.last %}
+                                    <i class="fas fa-chevron-right" style="color: #cbd5e1; font-size: 0.6rem;"></i>
+                                {% endif %}
+                            </div>
                         {% else %}
                             <span class="badge badge-warning">{{ event.status }}</span>
                         {% endfor %}
@@ -143,20 +144,21 @@
                 <td style="padding: 1rem 0;">{{ event.event_type }}</td>
                 <td style="padding: 1rem 0;">{{ event.event_date }}</td>
                 <td style="padding: 1rem 0;">
-                    <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
-                        {% set sorted_apps = event.approvals|sort(attribute='level') %}
+                    <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                        {% set sorted_apps = event.approvals|list|sort(attribute='level') %}
                         {% for app in sorted_apps %}
-                            <span class="badge 
-                                {% if app.status == 'Approved' %}badge-success
-                                {% elif app.status == 'Rejected' %}badge-danger
-                                {% elif app.status == 'Pending' %}badge-warning
-                                {% else %}badge-info{% endif %}"
-                                style="font-size: 0.65rem; padding: 0.2rem 0.4rem;" title="{{ app.status }}">
-                                {{ app.required_role }}
-                            </span>
-                            {% if not loop.last %}
-                                <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 0.6rem;"></i>
-                            {% endif %}
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <span style="font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.4rem; border-radius: 4px; white-space: nowrap;
+                                    {% if app.status == 'Approved' %}background: rgba(16, 185, 129, 0.15); color: #047857;
+                                    {% elif app.status == 'Rejected' %}background: rgba(239, 68, 68, 0.15); color: #b91c1c;
+                                    {% elif app.status == 'Pending' %}background: rgba(245, 158, 11, 0.15); color: #b45309;
+                                    {% else %}background: #f1f5f9; color: #64748b;{% endif %}" title="{{ app.status }}">
+                                    {{ app.required_role }}
+                                </span>
+                                {% if not loop.last %}
+                                    <i class="fas fa-chevron-right" style="color: #cbd5e1; font-size: 0.6rem;"></i>
+                                {% endif %}
+                            </div>
                         {% else %}
                             <span class="badge 
                                 {% if event.status == 'Approved' %}badge-success
