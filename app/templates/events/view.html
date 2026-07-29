@@ -27,6 +27,12 @@
             {% if event.status == 'Approved' %}
             <a href="{{ url_for('events.download_pdf', event_id=event.id) }}" class="btn btn-primary"><i class="fas fa-certificate"></i> Download Certificate</a>
             {% endif %}
+            
+            {% if current_user.is_admin() and event.status == 'Approved' %}
+            <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this approved event? This cannot be undone.');">
+                <button type="submit" class="btn btn-danger" style="margin-left: 0.5rem;"><i class="fas fa-trash"></i> Delete Event</button>
+            </form>
+            {% endif %}
         </div>
     </div>
 

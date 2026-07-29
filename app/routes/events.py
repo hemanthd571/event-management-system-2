@@ -354,3 +354,27 @@ def download_pdf(event_id):
 @login_required
 def download_attachment(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+@events_bp.route('/<int:event_id>/delete', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    if not current_user.is_admin():
+        flash('You do not have permission to delete events.', 'danger')
+        return redirect(url_for('dashboard.index'))
+        
+    event = Event.query.get_or_404(event_id)
+    
+    # We can restrict to only approved events if needed, but since admin is deleting,
+    # we can just delete it. The user requested "delete the approved events".
+    if event.status != 'Approved':
+        flash('Only approved events can be deleted by the admin.', 'warning')
+        return redirect(url_for('events.view', event_id=event.id))
+        
+    # Delete associated comments
+    from app.models import EventComment
+    EventComment.query.filter_by(event_id=event.id).delete()
+    
+    db.session.delete(event)
+    db.session.commit()
+    flash(f"Event '{event.title}' was successfully deleted.", 'success')
+    return redirect(url_for('dashboard.index'))
