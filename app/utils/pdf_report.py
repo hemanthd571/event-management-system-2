@@ -28,7 +28,7 @@ def generate_approval_pdf(event, approvals):
     Story.append(Paragraph(f"<b>Organizer:</b> {event.organizer_name}", styles['Normal']))
     Story.append(Paragraph(f"<b>Date:</b> {event.event_date} <b>Time:</b> {event.event_time}", styles['Normal']))
     Story.append(Paragraph(f"<b>Venue:</b> {event.venue}", styles['Normal']))
-    Story.append(Paragraph(f"<b>Budget:</b> ${event.budget}", styles['Normal']))
+    Story.append(Paragraph(f"<b>Budget:</b> ₹{event.budget}", styles['Normal']))
     Story.append(Paragraph(f"<b>Status:</b> {event.status}", styles['Normal']))
     Story.append(Spacer(1, 12))
 
