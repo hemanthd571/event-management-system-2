@@ -13,6 +13,20 @@ def generate_approval_pdf(event, approvals):
     
     Story = []
     styles = getSampleStyleSheet()
+    
+    # Increase font sizes
+    styles['Normal'].fontSize = 13
+    styles['Normal'].leading = 18
+    
+    styles['Title'].fontSize = 24
+    styles['Title'].leading = 28
+    
+    styles['Heading2'].fontSize = 18
+    styles['Heading2'].leading = 22
+    
+    styles['Heading3'].fontSize = 14
+    styles['Heading3'].leading = 18
+
     styles.add(ParagraphStyle(name='Center', alignment=1))
 
     # Header
@@ -57,7 +71,9 @@ def generate_approval_pdf(event, approvals):
         ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+        ('FONTSIZE', (0,0), (-1,-1), 12),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 12),
+        ('TOPPADDING', (0,0), (-1,-1), 12),
         ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#FDF8ED')), # Very Light Gold
         ('GRID', (0,0), (-1,-1), 1, colors.HexColor('#E3B559')) # GMU Gold borders
     ]))
