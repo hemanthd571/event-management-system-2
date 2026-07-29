@@ -570,7 +570,7 @@ tbody tr:hover {
     grid-template-columns: 1fr !important;
   }
 
-  table {
+  table:not([class*="fc"]) {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
