@@ -16,7 +16,12 @@ def generate_approval_pdf(event, approvals):
     styles.add(ParagraphStyle(name='Center', alignment=1))
 
     # Header
-    Story.append(Paragraph("Enterprise College Event Management", styles['Title']))
+    logo_path = os.path.join(current_app.root_path, 'static', 'images', 'gmu_logo.png')
+    if os.path.exists(logo_path):
+        Story.append(Image(logo_path, width=80, height=80))
+        Story.append(Spacer(1, 12))
+        
+    Story.append(Paragraph("GM University Event Management", styles['Title']))
     Story.append(Spacer(1, 12))
     Story.append(Paragraph("Certificate of Approval", styles['Title']))
     Story.append(Spacer(1, 12))
@@ -28,7 +33,7 @@ def generate_approval_pdf(event, approvals):
     Story.append(Paragraph(f"<b>Organizer:</b> {event.organizer_name}", styles['Normal']))
     Story.append(Paragraph(f"<b>Date:</b> {event.event_date} <b>Time:</b> {event.event_time}", styles['Normal']))
     Story.append(Paragraph(f"<b>Venue:</b> {event.venue}", styles['Normal']))
-    Story.append(Paragraph(f"<b>Budget:</b> ₹{event.budget}", styles['Normal']))
+    Story.append(Paragraph(f"<b>Budget:</b> Rs. {event.budget}", styles['Normal']))
     Story.append(Paragraph(f"<b>Status:</b> {event.status}", styles['Normal']))
     Story.append(Spacer(1, 12))
 
