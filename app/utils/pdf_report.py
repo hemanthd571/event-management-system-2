@@ -53,13 +53,13 @@ def generate_approval_pdf(event, approvals):
 
     t = Table(data, colWidths=[80, 80, 100, 200])
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#5C2C16')), # Betel Nut Brown
         ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
         ('BOTTOMPADDING', (0,0), (-1,0), 12),
-        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#FDF8ED')), # Very Light Gold
+        ('GRID', (0,0), (-1,-1), 1, colors.HexColor('#E3B559')) # GMU Gold borders
     ]))
     Story.append(t)
     Story.append(Spacer(1, 24))
@@ -74,7 +74,7 @@ def generate_approval_pdf(event, approvals):
         
     qr.add_data(verify_url)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
+    img = qr.make_image(fill_color="#5C2C16", back_color="#FDF8ED") # UI colors for QR code too
     
     qr_buffer = BytesIO()
     img.save(qr_buffer, format="PNG")
@@ -84,8 +84,15 @@ def generate_approval_pdf(event, approvals):
     Story.append(Spacer(1, 6))
     Story.append(Image(qr_buffer, width=120, height=120, hAlign='LEFT'))
 
+    # Define background drawing function
+    def draw_background(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColor(colors.HexColor('#F4F6F8')) # UI light background
+        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1, stroke=0)
+        canvas.restoreState()
+
     # Build PDF
-    doc.build(Story)
+    doc.build(Story, onFirstPage=draw_background, onLaterPages=draw_background)
     pdf_out = buffer.getvalue()
     buffer.close()
     return pdf_out
