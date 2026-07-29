@@ -7,7 +7,7 @@ from app.models import Event, Approval, Notification, EventComment
 from app import db
 from werkzeug.utils import secure_filename
 from app.utils.pdf_report import generate_approval_pdf
-from flask import make_response
+from flask import make_response, send_from_directory
 from flask_mail import Message
 from app import mail
 from threading import Thread
@@ -250,18 +250,12 @@ def view(event_id):
     approvals = Approval.query.filter_by(event_id=event.id).order_by(Approval.level).all()
     chat_messages = EventComment.query.filter_by(event_id=event.id).order_by(EventComment.created_at).all()
     
-    # Determine which approval is currently active
+    # Determine which approval is currently active in the hierarchy
     current_approval = None
-    if current_user.is_admin():
-        for app in approvals:
-            if app.status in ['Pending', 'Returned for Correction']:
-                current_approval = app
-                break
-    else:
-        for app in approvals:
-            if app.required_role == current_user.role.name and app.status in ['Pending', 'Returned for Correction']:
-                current_approval = app
-                break
+    for app in approvals:
+        if app.status in ['Pending', 'Returned for Correction']:
+            current_approval = app
+            break
 
     can_approve = False
     if current_approval:
@@ -343,3 +337,8 @@ def download_pdf(event_id):
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=event_{event.event_id}.pdf'
     return response
+
+@events_bp.route('/attachment/<filename>')
+@login_required
+def download_attachment(filename):
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)

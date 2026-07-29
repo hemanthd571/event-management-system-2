@@ -46,12 +46,12 @@
         <h3>Attachments</h3>
         <div style="display: flex; gap: 1rem;">
             {% if event.proposal_pdf_path %}
-            <a href="#" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
+            <a href="{{ url_for('events.download_attachment', filename=event.proposal_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
                 <i class="fas fa-file-pdf"></i> Proposal PDF
             </a>
             {% endif %}
             {% if event.budget_pdf_path %}
-            <a href="#" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
+            <a href="{{ url_for('events.download_attachment', filename=event.budget_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
                 <i class="fas fa-file-pdf"></i> Budget PDF
             </a>
             {% endif %}

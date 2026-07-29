@@ -34,16 +34,11 @@ def index():
             sorted_approvals = sorted(event.approvals, key=lambda a: a.level)
             current_app = None
             
-            if current_user.is_admin():
-                for app in sorted_approvals:
-                    if app.status in ['Pending', 'Returned for Correction']:
-                        current_app = app
-                        break
-            else:
-                for app in sorted_approvals:
-                    if app.status in ['Pending', 'Returned for Correction'] and app.required_role == current_user.role.name:
-                        current_app = app
-                        break
+            # Find the first pending approval in the hierarchy
+            for app in sorted_approvals:
+                if app.status in ['Pending', 'Returned for Correction']:
+                    current_app = app
+                    break
             
             if current_app:
                 if current_user.is_admin():
