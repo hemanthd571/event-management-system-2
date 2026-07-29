@@ -90,7 +90,18 @@ def create():
             return redirect(url_for('events.create'))
 
         if venue_id and start_time and end_time:
-            # Check for overlaps
+            # Check if date is globally locked by an approved University Level event
+            blocking_univ_event = Event.query.filter_by(
+                event_date=event_date,
+                event_type='University Level',
+                status='Approved'
+            ).first()
+
+            if blocking_univ_event:
+                flash(f'A University Level event ({blocking_univ_event.title}) is already scheduled for this date. No other events can be booked on this day.', 'danger')
+                return redirect(url_for('events.create'))
+
+            # Check for venue overlaps
             overlapping_events = Event.query.filter(
                 Event.event_date == event_date,
                 Event.venue_id == venue_id,
