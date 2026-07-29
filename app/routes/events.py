@@ -140,7 +140,11 @@ def create():
             ).first()
             
             if overlapping_events:
-                flash('This venue is already booked for the selected time slot (including a mandatory 1-hour setup/cleaning buffer). Please choose a different time or venue.', 'danger')
+                # Calculate when the venue is free (end_time + 1 hour buffer)
+                overlapping_end_dt = datetime.combine(event_date, overlapping_events.end_time)
+                free_from_time = (overlapping_end_dt + timedelta(minutes=60)).strftime('%I:%M %p')
+                
+                flash(f'This venue is already booked for the selected time slot. It will be free from {free_from_time} (including a mandatory 1-hour setup/cleaning buffer). Please choose a different time or venue.', 'danger')
                 return redirect(url_for('events.create'))
                 
         from app.models import Venue
