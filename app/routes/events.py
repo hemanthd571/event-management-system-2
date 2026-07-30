@@ -409,7 +409,7 @@ def upload_report(event_id):
     for file in files:
         ext = os.path.splitext(file.filename)[1].lower()
         if ext in allowed_extensions:
-            filename = secure_filename(f"report_{event.event_id}_{int(datetime.utcnow().timestamp())}_{file.filename}")
+            filename = secure_filename(f"report_{event.custom_id}_{int(datetime.utcnow().timestamp())}_{file.filename}")
             file_path = os.path.join(upload_folder, filename)
             file.save(file_path)
             saved_filenames.append(filename)
