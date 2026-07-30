@@ -416,7 +416,11 @@ def upload_report(event_id):
             
     if saved_filenames:
         # Join filenames with a comma to store in the single db column
-        event.post_event_report_path = ",".join(saved_filenames)
+        new_files_str = ",".join(saved_filenames)
+        if event.post_event_report_path:
+            event.post_event_report_path += "," + new_files_str
+        else:
+            event.post_event_report_path = new_files_str
         db.session.commit()
         flash("Post-event proof/images uploaded successfully!", "success")
     else:
