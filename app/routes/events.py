@@ -306,45 +306,53 @@ def view(event_id):
 
     # Handle approval action
     if request.method == 'POST' and can_approve:
-        action = request.form.get('action') # Approved, Rejected, Returned for Correction
-        comments = request.form.get('comments')
-        
-        current_approval.status = action
-        current_approval.comments = comments
-        current_approval.approver_id = current_user.id
-        current_approval.action_date = datetime.utcnow()
-
-        if action == 'Rejected':
-            event.status = 'Rejected'
-        elif action == 'Returned for Correction':
-            event.status = 'Returned for Correction'
-        elif action == 'Approved':
-            # Check if there's any pending approval left in the hierarchy
-            next_app = None
-            for app in approvals: # approvals is already ordered by level
-                if app.status in ['Pending', 'Returned for Correction']:
-                    next_app = app
-                    break
+        try:
+            action = request.form.get('action') # Approved, Rejected, Returned for Correction
+            comments = request.form.get('comments')
+            
+            current_approval.status = action
+            current_approval.comments = comments
+            current_approval.approver_id = current_user.id
+            current_approval.action_date = datetime.utcnow()
+    
+            if action == 'Rejected':
+                event.status = 'Rejected'
+            elif action == 'Returned for Correction':
+                event.status = 'Returned for Correction'
+            elif action == 'Approved':
+                # Check if there's any pending approval left in the hierarchy
+                next_app = None
+                for app in approvals: # approvals is already ordered by level
+                    if app.status in ['Pending', 'Returned for Correction']:
+                        next_app = app
+                        break
+                        
+                if next_app:
+                    event.status = f"Pending {next_app.required_role} Approval"
+                    # Notify the next approver in line
+                    notify_approvers(event, next_app.required_role)
+                else:
+                    event.status = 'Approved'
                     
-            if next_app:
-                event.status = f"Pending {next_app.required_role} Approval"
-                # Notify the next approver in line
-                notify_approvers(event, next_app.required_role)
-            else:
-                event.status = 'Approved'
-                
-        notif = Notification(user_id=event.organizer_id, message=f"Event '{event.title}' was {action} by {current_user.role.name}")
-        db.session.add(notif)
-        
-        # Email organizer about status change
-        from app.models import User
-        organizer_user = User.query.get(event.organizer_id)
-        if organizer_user:
-            send_email_notification(organizer_user.email, f"Proposal {action}", f"Your proposal '{event.title}' was {action} by {current_user.role.name}.\nComments: {comments or 'None'}")
-        
-        db.session.commit()
-        flash('Action recorded successfully.', 'success')
-        return redirect(url_for('events.view', event_id=event.id))
+            notif = Notification(user_id=event.organizer_id, message=f"Event '{event.title}' was {action} by {current_user.role.name}")
+            db.session.add(notif)
+            
+            # Email organizer about status change
+            from app.models import User
+            organizer_user = User.query.get(event.organizer_id)
+            if organizer_user:
+                send_email_notification(organizer_user.email, f"Proposal {action}", f"Your proposal '{event.title}' was {action} by {current_user.role.name}.\nComments: {comments or 'None'}")
+            
+            db.session.commit()
+            flash('Action recorded successfully.', 'success')
+            return redirect(url_for('events.view', event_id=event.id))
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            db.session.rollback()
+            print(tb)
+            flash(f"An error occurred: {str(e)}", "danger")
+            return redirect(url_for('events.view', event_id=event.id))
 
     return render_template('events/view.html', event=event, approvals=approvals, can_approve=can_approve, current_approval=current_approval, chat_messages=chat_messages)
 
