@@ -159,22 +159,22 @@ def create():
             start_time_buf = (start_dt - timedelta(minutes=60)).time()
             end_time_buf = (end_dt + timedelta(minutes=60)).time()
 
-            # Check for venue overlaps
-            # overlapping_events = Event.query.filter(
-            #     Event.event_date == event_date,
-            #     Event.venue_id == venue_id,
-            #     Event.status != 'Rejected',
-            #     Event.start_time < end_time_buf,
-            #     Event.end_time > start_time_buf
-            # ).first()
-            # 
-            # if overlapping_events:
-            #     # Calculate when the venue is free (end_time + 1 hour buffer)
-            #     overlapping_end_dt = datetime.combine(event_date, overlapping_events.end_time)
-            #     free_from_time = (overlapping_end_dt + timedelta(minutes=60)).strftime('%I:%M %p')
-            #     
-            #     flash(f'This venue is already booked for the selected time slot. It will be free from {free_from_time} (including a mandatory 1-hour setup/cleaning buffer). Please choose a different time or venue.', 'danger')
-            #     return redirect(url_for('events.create'))
+            # Check for venue overlaps (exact time slot clash)
+            overlapping_events = Event.query.filter(
+                Event.event_date == event_date,
+                Event.venue_id == venue_id,
+                Event.status != 'Rejected',
+                Event.start_time < end_time_buf,
+                Event.end_time > start_time_buf
+            ).first()
+            
+            if overlapping_events:
+                # Calculate when the venue is free (end_time + 1 hour buffer)
+                overlapping_end_dt = datetime.combine(event_date, overlapping_events.end_time)
+                free_from_time = (overlapping_end_dt + timedelta(minutes=60)).strftime('%I:%M %p')
+                
+                flash(f'This venue is already booked for the selected time slot. It will be free from {free_from_time} (including a mandatory 1-hour setup/cleaning buffer). Please choose a different time or venue.', 'danger')
+                return redirect(url_for('events.create'))
                 
         from app.models import Venue
         venue_obj = Venue.query.get(venue_id) if venue_id else None
