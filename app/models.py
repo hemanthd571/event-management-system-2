@@ -56,6 +56,7 @@ class Event(db.Model):
     event_id = db.Column(db.String(20), unique=True, nullable=False) # e.g. EVT-2023-001
     title = db.Column(db.String(200), nullable=False)
     event_type = db.Column(db.String(50), nullable=False) # 'University Level' or 'Department Level'
+    event_category = db.Column(db.String(50), nullable=False, default='Seminar/Workshop', server_default='Seminar/Workshop')
     
     organizer_name = db.Column(db.String(100), nullable=False)
     faculty_coordinator = db.Column(db.String(100), nullable=False)

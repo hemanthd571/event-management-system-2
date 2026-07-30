@@ -183,6 +183,7 @@ def create():
             event_id=event_id_str,
             title=request.form.get('title'),
             event_type=request.form.get('event_type'),
+            event_category=request.form.get('event_category'),
             organizer_name=request.form.get('organizer_name'),
             faculty_coordinator=request.form.get('faculty_coordinator'),
             event_date=event_date,

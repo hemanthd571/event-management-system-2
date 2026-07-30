@@ -184,11 +184,17 @@
 
 <!-- Analytics Section -->
 {% if current_user.role.name != 'Student/Organizer' %}
-<div class="dashboard-stats" style="grid-template-columns: 1fr; margin-top: 1.5rem;">
+<div class="dashboard-stats" style="grid-template-columns: 1fr 1fr; margin-top: 1.5rem;">
     <div class="card">
         <h3 style="margin-top: 0;">Budget by Department</h3>
         <div style="max-width: 500px; margin: 0 auto;">
             <canvas id="budgetChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h3 style="margin-top: 0;">Budget by Event Category</h3>
+        <div style="max-width: 500px; margin: 0 auto;">
+            <canvas id="categoryChart"></canvas>
         </div>
     </div>
 </div>
@@ -213,18 +219,69 @@
                         'rgba(92, 44, 22, 0.8)',   /* Betel Nut Brown */
                         'rgba(227, 181, 89, 0.8)', /* GMU Gold */
                         'rgba(200, 155, 66, 0.8)', /* Darker Gold */
-                        'rgba(120, 63, 32, 0.8)',  /* Deep Maroon/Brown */
-                        'rgba(240, 200, 110, 0.8)' /* Light Gold */
+                        'rgba(60, 30, 15, 0.8)',   /* Darker Brown */
+                        'rgba(150, 100, 50, 0.8)', /* Medium Brown */
                     ],
-                    borderWidth: 1
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.1)'
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const catChartCanvas = document.getElementById('categoryChart');
+    if (catChartCanvas) {
+        const ctx2 = catChartCanvas.getContext('2d');
+        const catLabels = {{ cat_chart_labels | tojson }};
+        const catData = {{ cat_chart_data | tojson }};
+
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    label: 'Approved Budget (₹)',
+                    data: catData,
+                    backgroundColor: 'rgba(227, 181, 89, 0.8)', /* GMU Gold */
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        },
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }

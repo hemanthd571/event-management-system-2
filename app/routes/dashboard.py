@@ -20,6 +20,15 @@ def index():
     
     chart_labels = [row[0] for row in dept_budgets]
     chart_data = [float(row[1] or 0) for row in dept_budgets]
+    
+    # Get Budget by Event Category for Chart
+    cat_budgets = db.session.query(
+        Event.event_category, 
+        func.sum(Event.budget)
+    ).filter(Event.status == 'Approved').group_by(Event.event_category).all()
+    
+    cat_chart_labels = [row[0] for row in cat_budgets]
+    cat_chart_data = [float(row[1] or 0) for row in cat_budgets]
 
     # If the user is a Student/Organizer, only show their own events
     if current_user.role.name == 'Student/Organizer':
@@ -55,7 +64,9 @@ def index():
         'pending_my_approval': pending_my_approval,
         'total_budget': total_budget,
         'chart_labels': chart_labels,
-        'chart_data': chart_data
+        'chart_data': chart_data,
+        'cat_chart_labels': cat_chart_labels,
+        'cat_chart_data': cat_chart_data
     }
     return render_template('dashboard/index.html', **context)
 

@@ -23,6 +23,7 @@
                     {% endfor %}
                 </div>
                 <span class="badge badge-info">{{ event.event_type }}</span>
+                <span class="badge" style="background-color: var(--secondary-color); color: white; margin-left: 0.5rem;">{{ event.event_category }}</span>
             </div>
             <div>
                 {% if event.status == 'Approved' %}
