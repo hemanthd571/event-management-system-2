@@ -136,8 +136,10 @@
                 {% if not event.post_event_report_path or not event.post_event_bill_path %}
                     {% if not event.post_event_report_path and not event.post_event_bill_path %}
                     <p style="margin-top: 0; color: var(--text-secondary);">No completion proof or budget bills have been uploaded yet.</p>
-                    {% else %}
+                    {% elif current_user.id == event.organizer_id or current_user.is_admin() %}
                     <p style="margin-top: 1rem; color: var(--text-secondary);">You can upload missing documents below.</p>
+                    {% else %}
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Waiting for the organizer to upload remaining documents.</p>
                     {% endif %}
                     
                     {% if current_user.id == event.organizer_id or current_user.is_admin() %}
