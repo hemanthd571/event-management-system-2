@@ -77,19 +77,20 @@ def create():
     from datetime import date
     from sqlalchemy import or_
     
-    # Check if the user has any past approved events without completion proof
-    past_missing_events = Event.query.filter(
-        Event.organizer_id == current_user.id,
-        Event.status == 'Approved',
-        Event.event_date < date.today(),
-        or_(Event.post_event_report_path == None, Event.post_event_report_path == '')
-    ).all()
-
-    missing_events = [e for e in past_missing_events if not e.post_event_report_path]
+    # Check if the user has any past approved events without completion proof (Skip for Admin)
+    if not current_user.is_admin():
+        past_missing_events = Event.query.filter(
+            Event.organizer_id == current_user.id,
+            Event.status == 'Approved',
+            Event.event_date < date.today(),
+            or_(Event.post_event_report_path == None, Event.post_event_report_path == '')
+        ).all()
     
-    if missing_events:
-        flash(f"You cannot create a new event. You have a past event ('{missing_events[0].title}') with missing completion proof. Please upload the proof first.", "danger")
-        return redirect(url_for('dashboard.index'))
+        missing_events = [e for e in past_missing_events if not e.post_event_report_path]
+        
+        if missing_events:
+            flash(f"You cannot create a new event. You have a past event ('{missing_events[0].title}') with missing completion proof. Please upload the proof first.", "danger")
+            return redirect(url_for('dashboard.index'))
 
     if request.method == 'POST':
         # Auto generate Event ID
