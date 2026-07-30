@@ -114,9 +114,7 @@ def create():
 
         # Save files as Base64 strings
         proposal_pdf = request.files.get('proposal_pdf')
-        budget_pdf = request.files.get('budget_pdf')
         proposal_path = encode_file_to_base64(proposal_pdf)
-        budget_path = encode_file_to_base64(budget_pdf)
 
         try:
             event_date = datetime.strptime(request.form.get('event_date'), '%Y-%m-%d').date()
@@ -196,7 +194,6 @@ def create():
             objectives=request.form.get('objectives'),
             description=request.form.get('description'),
             proposal_pdf_path=proposal_path,
-            budget_pdf_path=budget_path,
             status='Pending', # Will update based on event_type below
             department_id=int(request.form.get('department_id', current_user.department_id or 1)),
             organizer_id=current_user.id
@@ -417,13 +414,11 @@ def upload_report(event_id):
         flash("You can only generate a report for an approved event.", "warning")
         return redirect(url_for('events.view', event_id=event.id))
         
-    if 'report_files' not in request.files:
-        flash("No file part", "danger")
-        return redirect(url_for('events.view', event_id=event.id))
-        
     files = request.files.getlist('report_files')
-    if not files or files[0].filename == '':
-        flash("No selected file", "danger")
+    budget_pdf = request.files.get('budget_pdf')
+    
+    if (not files or files[0].filename == '') and (not budget_pdf or budget_pdf.filename == ''):
+        flash("No files selected", "danger")
         return redirect(url_for('events.view', event_id=event.id))
         
     upload_folder = current_app.config['UPLOAD_FOLDER']
@@ -435,6 +430,8 @@ def upload_report(event_id):
     
     import base64
     for file in files:
+        if file.filename == '':
+            continue
         ext = os.path.splitext(file.filename)[1].lower()
         if ext in allowed_extensions:
             file_data = file.read()
@@ -455,9 +452,27 @@ def upload_report(event_id):
             event.post_event_report_path += "|||" + new_files_str
         else:
             event.post_event_report_path = new_files_str
+
+    if budget_pdf and budget_pdf.filename != '':
+        ext = os.path.splitext(budget_pdf.filename)[1].lower()
+        if ext in allowed_extensions:
+            file_data = budget_pdf.read()
+            mime_type = "application/octet-stream"
+            if ext == '.pdf':
+                mime_type = "application/pdf"
+            elif ext in {'.jpg', '.jpeg'}:
+                mime_type = "image/jpeg"
+            elif ext == '.png':
+                mime_type = "image/png"
+            
+            base64_str = f"data:{mime_type};base64," + base64.b64encode(file_data).decode('utf-8')
+            event.budget_pdf_path = base64_str
+
+    if saved_files_data or (budget_pdf and budget_pdf.filename != ''):
         db.session.commit()
-        flash("Post-event proof/images uploaded successfully!", "success")
+        flash("Files uploaded successfully!", "success")
     else:
         flash("Only PDF and Image files (.jpg, .png) are allowed.", "danger")
         
     return redirect(url_for('events.view', event_id=event.id))
+
