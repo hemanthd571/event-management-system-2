@@ -35,4 +35,12 @@ def create_app(config_class=Config):
     # Ensure upload folder exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+    # Automatically apply database migrations on startup
+    with app.app_context():
+        from flask_migrate import upgrade
+        try:
+            upgrade()
+        except Exception as e:
+            print(f"Auto-migration failed: {e}")
+
     return app
