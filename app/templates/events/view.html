@@ -6,106 +6,107 @@
 <div class="dashboard-stats" style="grid-template-columns: 2fr 1fr;">
     
     <!-- Left Column: Details -->
-    <div class="card" style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div>
-            <h2 style="margin-top: 0;">{{ event.title }}</h2>
-            <div class="approval-flow" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
-                {% for app in approvals %}
-                    <span class="badge 
-                        {% if app.status == 'Approved' %}badge-success
-                        {% else %}badge-danger{% endif %}">
-                        {{ app.required_role }}
-                    </span>
-                    {% if not loop.last %}
-                        <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 0.8rem;"></i>
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <span class="badge badge-info">{{ event.event_type }}</span>
-        </div>
-        <div>
-            {% if event.status == 'Approved' %}
-            <a href="{{ url_for('events.download_pdf', event_id=event.id) }}" class="btn btn-primary"><i class="fas fa-certificate"></i> Download Certificate</a>
-            {% endif %}
-            
-            {% if current_user.is_admin() and event.status == 'Approved' %}
-            <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this approved event? This cannot be undone.');">
-                <button type="submit" class="btn btn-danger" style="margin-left: 0.5rem;"><i class="fas fa-trash"></i> Delete Event</button>
-            </form>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card">
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div><strong>Organizer:</strong> {{ event.organizer_name }}</div>
-            <div><strong>Faculty Coord:</strong> {{ event.faculty_coordinator }}</div>
-            <div><strong>Date:</strong> {{ event.event_date }}</div>
-            <div><strong>Time:</strong> {{ event.start_time.strftime('%I:%M %p') if event.start_time else event.event_time }} {% if event.end_time %}- {{ event.end_time.strftime('%I:%M %p') }}{% endif %}</div>
-            <div><strong>Venue:</strong> {{ event.venue_obj.name if event.venue_obj else event.venue }}</div>
-            <div><strong>Budget:</strong> ₹{{ event.budget }}</div>
-        </div>
-
-        <h3 style="margin-top: 1.5rem;">Objectives</h3>
-        <p>{{ event.objectives }}</p>
-
-        <h3>Description</h3>
-        <p>{{ event.description }}</p>
-        
-        {% if event.proposal_pdf_path or event.budget_pdf_path %}
-        <h3>Attachments</h3>
-        <div style="display: flex; gap: 1rem;">
-            {% if event.proposal_pdf_path %}
-            <a href="{{ url_for('events.download_attachment', filename=event.proposal_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
-                <i class="fas fa-file-pdf"></i> Proposal PDF
-            </a>
-            {% endif %}
-            {% if event.budget_pdf_path %}
-            <a href="{{ url_for('events.download_attachment', filename=event.budget_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
-                <i class="fas fa-file-pdf"></i> Budget PDF
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        {% if event.status == 'Approved' %}
-        <h3 style="margin-top: 2rem;">Post-Event Completion Proof</h3>
-        <div style="padding: 1rem; border: 1px dashed var(--border-color); border-radius: 8px; background-color: rgba(255, 255, 255, 0.05);">
-            {% if event.post_event_report_path %}
-                <p style="margin-top: 0;"><i class="fas fa-check-circle" style="color: var(--success);"></i> Completion proof/images have been uploaded.</p>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                {% set files = event.post_event_report_path.split(',') %}
-                {% for file in files %}
-                    {% set is_image = file.endswith('.jpg') or file.endswith('.jpeg') or file.endswith('.png') %}
-                    {% if is_image %}
-                        <div style="margin-top: 0.5rem;">
-                            <a href="{{ url_for('events.download_attachment', filename=file) }}" target="_blank">
-                                <img src="{{ url_for('events.download_attachment', filename=file) }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color);">
-                            </a>
-                        </div>
-                    {% else %}
-                        <a href="{{ url_for('events.download_attachment', filename=file) }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;">
-                            <i class="fas fa-file-download"></i> View Proof
-                        </a>
-                    {% endif %}
-                {% endfor %}
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h2 style="margin-top: 0;">{{ event.title }}</h2>
+                <div class="approval-flow" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                    {% for app in approvals %}
+                        <span class="badge 
+                            {% if app.status == 'Approved' %}badge-success
+                            {% else %}badge-danger{% endif %}">
+                            {{ app.required_role }}
+                        </span>
+                        {% if not loop.last %}
+                            <i class="fas fa-arrow-right" style="color: var(--text-secondary); font-size: 0.8rem;"></i>
+                        {% endif %}
+                    {% endfor %}
                 </div>
-            {% else %}
-                <p style="margin-top: 0; color: var(--text-secondary);">No completion proof/images have been uploaded yet.</p>
+                <span class="badge badge-info">{{ event.event_type }}</span>
+            </div>
+            <div>
+                {% if event.status == 'Approved' %}
+                <a href="{{ url_for('events.download_pdf', event_id=event.id) }}" class="btn btn-primary"><i class="fas fa-certificate"></i> Download Certificate</a>
+                {% endif %}
                 
-                {% if current_user.id == event.organizer_id or current_user.is_admin() %}
-                <form action="{{ url_for('events.upload_report', event_id=event.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 300px;">
-                    <label class="form-label">Upload Proof & Images (PDF, JPG, PNG)</label>
-                    <input type="file" name="report_files" accept=".pdf, image/*" multiple class="form-control" required>
-                    <small style="color: var(--text-secondary); margin-top: -0.25rem;">You can select multiple files</small>
-                    <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i class="fas fa-upload"></i> Upload Files</button>
+                {% if current_user.is_admin() and event.status == 'Approved' %}
+                <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this approved event? This cannot be undone.');">
+                    <button type="submit" class="btn btn-danger" style="margin-left: 0.5rem;"><i class="fas fa-trash"></i> Delete Event</button>
                 </form>
                 {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Event Information</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div><strong>Organizer:</strong> {{ event.organizer_name }}</div>
+                <div><strong>Faculty Coord:</strong> {{ event.faculty_coordinator }}</div>
+                <div><strong>Date:</strong> {{ event.event_date }}</div>
+                <div><strong>Time:</strong> {{ event.start_time.strftime('%I:%M %p') if event.start_time else event.event_time }} {% if event.end_time %}- {{ event.end_time.strftime('%I:%M %p') }}{% endif %}</div>
+                <div><strong>Venue:</strong> {{ event.venue_obj.name if event.venue_obj else event.venue }}</div>
+                <div><strong>Budget:</strong> ₹{{ event.budget }}</div>
+            </div>
+
+            <h3 style="margin-top: 1.5rem;">Objectives</h3>
+            <p>{{ event.objectives }}</p>
+
+            <h3>Description</h3>
+            <p>{{ event.description }}</p>
+            
+            {% if event.proposal_pdf_path or event.budget_pdf_path %}
+            <h3>Attachments</h3>
+            <div style="display: flex; gap: 1rem;">
+                {% if event.proposal_pdf_path %}
+                <a href="{{ url_for('events.download_attachment', filename=event.proposal_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fas fa-file-pdf"></i> Proposal PDF
+                </a>
+                {% endif %}
+                {% if event.budget_pdf_path %}
+                <a href="{{ url_for('events.download_attachment', filename=event.budget_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fas fa-file-pdf"></i> Budget PDF
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if event.status == 'Approved' %}
+            <h3 style="margin-top: 2rem;">Post-Event Completion Proof</h3>
+            <div style="padding: 1rem; border: 1px dashed var(--border-color); border-radius: 8px; background-color: rgba(255, 255, 255, 0.05);">
+                {% if event.post_event_report_path %}
+                    <p style="margin-top: 0;"><i class="fas fa-check-circle" style="color: var(--success);"></i> Completion proof/images have been uploaded.</p>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    {% set files = event.post_event_report_path.split(',') %}
+                    {% for file in files %}
+                        {% set is_image = file.endswith('.jpg') or file.endswith('.jpeg') or file.endswith('.png') %}
+                        {% if is_image %}
+                            <div style="margin-top: 0.5rem;">
+                                <a href="{{ url_for('events.download_attachment', filename=file) }}" target="_blank">
+                                    <img src="{{ url_for('events.download_attachment', filename=file) }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                </a>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('events.download_attachment', filename=file) }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;">
+                                <i class="fas fa-file-download"></i> View Proof
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="margin-top: 0; color: var(--text-secondary);">No completion proof/images have been uploaded yet.</p>
+                    
+                    {% if current_user.id == event.organizer_id or current_user.is_admin() %}
+                    <form action="{{ url_for('events.upload_report', event_id=event.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 300px;">
+                        <label class="form-label">Upload Proof & Images (PDF, JPG, PNG)</label>
+                        <input type="file" name="report_files" accept=".pdf, image/*" multiple class="form-control" required>
+                        <small style="color: var(--text-secondary); margin-top: -0.25rem;">You can select multiple files</small>
+                        <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i class="fas fa-upload"></i> Upload Files</button>
+                    </form>
+                    {% endif %}
+                {% endif %}
+            </div>
             {% endif %}
         </div>
-        {% endif %}
     </div>
 
     <!-- Right Column: Approvals -->
