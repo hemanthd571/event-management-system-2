@@ -7,7 +7,7 @@ Create Date: 2026-07-30 14:58:45.226692
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
+
 
 # revision identifiers, used by Alembic.
 revision = '3c5a5673d2bd'
@@ -21,7 +21,7 @@ def upgrade():
     with op.batch_alter_table('events', schema=None) as batch_op:
         batch_op.add_column(sa.Column('reminder_sent', sa.Boolean(), nullable=True))
         batch_op.alter_column('post_event_report_path',
-               existing_type=mysql.LONGTEXT(),
+               existing_type=sa.Text(length=16777215),
                type_=sa.Text(length=16777215),
                existing_nullable=True)
 
@@ -33,7 +33,7 @@ def downgrade():
     with op.batch_alter_table('events', schema=None) as batch_op:
         batch_op.alter_column('post_event_report_path',
                existing_type=sa.Text(length=16777215),
-               type_=mysql.LONGTEXT(),
+               type_=sa.Text(length=16777215),
                existing_nullable=True)
         batch_op.drop_column('reminder_sent')
 

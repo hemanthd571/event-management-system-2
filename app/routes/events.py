@@ -115,6 +115,9 @@ def create():
         # Save files as Base64 strings
         proposal_pdf = request.files.get('proposal_pdf')
         proposal_path = encode_file_to_base64(proposal_pdf)
+        
+        budget_pdf = request.files.get('budget_pdf')
+        budget_path = encode_file_to_base64(budget_pdf)
 
         try:
             event_date = datetime.strptime(request.form.get('event_date'), '%Y-%m-%d').date()
@@ -194,6 +197,7 @@ def create():
             objectives=request.form.get('objectives'),
             description=request.form.get('description'),
             proposal_pdf_path=proposal_path,
+            budget_pdf_path=budget_path,
             status='Pending', # Will update based on event_type below
             department_id=int(request.form.get('department_id', current_user.department_id or 1)),
             organizer_id=current_user.id
