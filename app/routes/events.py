@@ -364,15 +364,12 @@ def delete_event(event_id):
         
     event = Event.query.get_or_404(event_id)
     
-    # We can restrict to only approved events if needed, but since admin is deleting,
-    # we can just delete it. The user requested "delete the approved events".
-    if event.status != 'Approved':
-        flash('Only approved events can be deleted by the admin.', 'warning')
-        return redirect(url_for('events.view', event_id=event.id))
+    # The admin can delete any event, regardless of status.
         
-    # Delete associated comments
-    from app.models import EventComment
+    # Delete associated comments and approvals
+    from app.models import EventComment, Approval
     EventComment.query.filter_by(event_id=event.id).delete()
+    Approval.query.filter_by(event_id=event.id).delete()
     
     db.session.delete(event)
     db.session.commit()
