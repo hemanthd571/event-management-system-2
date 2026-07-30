@@ -75,13 +75,14 @@ def send_email_notification(to_email, subject, body):
 @login_required
 def create():
     from datetime import date
+    from sqlalchemy import or_
     
     # Check if the user has any past approved events without completion proof
     past_missing_events = Event.query.filter(
         Event.organizer_id == current_user.id,
         Event.status == 'Approved',
         Event.event_date < date.today(),
-        Event.post_event_report_path == None
+        or_(Event.post_event_report_path == None, Event.post_event_report_path == '')
     ).all()
 
     missing_events = [e for e in past_missing_events if not e.post_event_report_path]
