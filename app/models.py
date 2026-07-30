@@ -78,9 +78,9 @@ class Event(db.Model):
     schedule = db.Column(db.Text)
     required_resources = db.Column(db.Text)
     
-    proposal_pdf_path = db.Column(db.String(255))
-    budget_pdf_path = db.Column(db.String(255))
-    supporting_docs_path = db.Column(db.String(255))
+    proposal_pdf_path = db.Column(db.Text(16777215))
+    budget_pdf_path = db.Column(db.Text(16777215))
+    supporting_docs_path = db.Column(db.Text(16777215))
     post_event_report_path = db.Column(db.Text(16777215))
     reminder_sent = db.Column(db.Boolean, default=False)
     

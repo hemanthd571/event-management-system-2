@@ -102,11 +102,21 @@ def create():
                 break
             event_count += 1
         
-        # Save files
+        import base64
+        
+        def encode_file_to_base64(file):
+            if not file or file.filename == '':
+                return None
+            mimetype = file.content_type
+            file_content = file.read()
+            base64_data = base64.b64encode(file_content).decode('utf-8')
+            return f"data:{mimetype};base64,{base64_data}"
+
+        # Save files as Base64 strings
         proposal_pdf = request.files.get('proposal_pdf')
         budget_pdf = request.files.get('budget_pdf')
-        proposal_path = save_file(proposal_pdf)
-        budget_path = save_file(budget_pdf)
+        proposal_path = encode_file_to_base64(proposal_pdf)
+        budget_path = encode_file_to_base64(budget_pdf)
 
         try:
             event_date = datetime.strptime(request.form.get('event_date'), '%Y-%m-%d').date()
