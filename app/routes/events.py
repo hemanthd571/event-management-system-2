@@ -427,9 +427,9 @@ def upload_report(event_id):
         return redirect(url_for('events.view', event_id=event.id))
         
     files = request.files.getlist('report_files')
-    budget_pdf = request.files.get('budget_pdf')
+    post_event_bill = request.files.get('post_event_bill')
     
-    if (not files or files[0].filename == '') and (not budget_pdf or budget_pdf.filename == ''):
+    if (not files or files[0].filename == '') and (not post_event_bill or post_event_bill.filename == ''):
         flash("No files selected", "danger")
         return redirect(url_for('events.view', event_id=event.id))
         
@@ -465,10 +465,10 @@ def upload_report(event_id):
         else:
             event.post_event_report_path = new_files_str
 
-    if budget_pdf and budget_pdf.filename != '':
-        ext = os.path.splitext(budget_pdf.filename)[1].lower()
+    if post_event_bill and post_event_bill.filename != '':
+        ext = os.path.splitext(post_event_bill.filename)[1].lower()
         if ext in allowed_extensions:
-            file_data = budget_pdf.read()
+            file_data = post_event_bill.read()
             mime_type = "application/octet-stream"
             if ext == '.pdf':
                 mime_type = "application/pdf"
@@ -478,9 +478,9 @@ def upload_report(event_id):
                 mime_type = "image/png"
             
             base64_str = f"data:{mime_type};base64," + base64.b64encode(file_data).decode('utf-8')
-            event.budget_pdf_path = base64_str
+            event.post_event_bill_path = base64_str
 
-    if saved_files_data or (budget_pdf and budget_pdf.filename != ''):
+    if saved_files_data or (post_event_bill and post_event_bill.filename != ''):
         db.session.commit()
         flash("Files uploaded successfully!", "success")
     else:
