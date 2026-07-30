@@ -82,6 +82,7 @@ class Event(db.Model):
     budget_pdf_path = db.Column(db.String(255))
     supporting_docs_path = db.Column(db.String(255))
     post_event_report_path = db.Column(db.Text(16777215))
+    reminder_sent = db.Column(db.Boolean, default=False)
     
     status = db.Column(db.String(50), default='Submitted') # Submitted, Pending Faculty Approval, etc.
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -74,6 +74,22 @@ def send_email_notification(to_email, subject, body):
 @events_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
+    from datetime import date
+    
+    # Check if the user has any past approved events without completion proof
+    past_missing_events = Event.query.filter(
+        Event.organizer_id == current_user.id,
+        Event.status == 'Approved',
+        Event.event_date < date.today(),
+        Event.post_event_report_path == None
+    ).all()
+
+    missing_events = [e for e in past_missing_events if not e.post_event_report_path]
+    
+    if missing_events:
+        flash(f"You cannot create a new event. You have a past event ('{missing_events[0].title}') with missing completion proof. Please upload the proof first.", "danger")
+        return redirect(url_for('dashboard.index'))
+
     if request.method == 'POST':
         # Auto generate Event ID
         current_year = datetime.now().year
