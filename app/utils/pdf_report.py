@@ -211,9 +211,16 @@ def generate_post_event_pdf(event, actual_spent, actual_attendees, outcomes):
     
     def draw_background(canvas, doc):
         canvas.saveState()
+        canvas.setFillColor(colors.HexColor('#FCF8F2')) 
+        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1, stroke=0)
+        
         canvas.setStrokeColor(colors.HexColor('#5C2C16'))
         canvas.setLineWidth(3)
         canvas.rect(20, 20, doc.pagesize[0]-40, doc.pagesize[1]-40, fill=0, stroke=1)
+        
+        canvas.setStrokeColor(colors.HexColor('#E3B559'))
+        canvas.setLineWidth(1)
+        canvas.rect(25, 25, doc.pagesize[0]-50, doc.pagesize[1]-50, fill=0, stroke=1)
         canvas.restoreState()
     
     doc.build(Story, onFirstPage=draw_background, onLaterPages=draw_background)
