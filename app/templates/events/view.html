@@ -54,33 +54,30 @@
             <h3>Description</h3>
             <p>{{ event.description }}</p>
             
-            {% if event.proposal_pdf_path or event.budget_pdf_path %}
+            {% if event.proposal_pdf_path %}
             <h3>Attachments</h3>
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                {% if event.proposal_pdf_path %}
-                    {% if event.proposal_pdf_path.startswith('data:') %}
-                        {% if event.proposal_pdf_path.startswith('data:image/') %}
-                            <div style="margin-top: 0.5rem; text-align: center;">
-                                <img src="{{ event.proposal_pdf_path }}" alt="Proposal Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('proposalImageModal').style.display='flex'">
-                                <br>
-                                <a href="{{ event.proposal_pdf_path }}" download="proposal_image.png" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;"><i class="fas fa-download"></i> Download Proposal</a>
-                                
-                                <div id="proposalImageModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
-                                    <span style="position:absolute; top:20px; right:35px; color:#f1f1f1; font-size:40px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('proposalImageModal').style.display='none'">&times;</span>
-                                    <img src="{{ event.proposal_pdf_path }}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-                                </div>
+                {% if event.proposal_pdf_path.startswith('data:') %}
+                    {% if event.proposal_pdf_path.startswith('data:image/') %}
+                        <div style="margin-top: 0.5rem; text-align: center;">
+                            <img src="{{ event.proposal_pdf_path }}" alt="Proposal Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('proposalImageModal').style.display='flex'">
+                            <br>
+                            <a href="{{ event.proposal_pdf_path }}" download="proposal_image.png" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;"><i class="fas fa-download"></i> Download Proposal</a>
+                            
+                            <div id="proposalImageModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+                                <span style="position:absolute; top:20px; right:35px; color:#f1f1f1; font-size:40px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('proposalImageModal').style.display='none'">&times;</span>
+                                <img src="{{ event.proposal_pdf_path }}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
                             </div>
-                        {% else %}
-                            <a href="{{ event.proposal_pdf_path }}" target="_blank" class="btn" download="proposal.pdf" style="border: 1px solid var(--border-color); color: var(--text-primary);">
-                                <i class="fas fa-file-pdf"></i> Proposal PDF
-                            </a>
-                        {% endif %}
+                        </div>
                     {% else %}
-                        <a href="{{ url_for('events.download_attachment', filename=event.proposal_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
+                        <a href="{{ event.proposal_pdf_path }}" target="_blank" class="btn" download="proposal.pdf" style="border: 1px solid var(--border-color); color: var(--text-primary);">
                             <i class="fas fa-file-pdf"></i> Proposal PDF
                         </a>
                     {% endif %}
-                {% endif %}
+                {% else %}
+                    <a href="{{ url_for('events.download_attachment', filename=event.proposal_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
+                        <i class="fas fa-file-pdf"></i> Proposal PDF
+                    </a>
                 {% endif %}
             </div>
             {% endif %}
