@@ -124,3 +124,103 @@ def generate_approval_pdf(event, approvals):
     pdf_out = buffer.getvalue()
     buffer.close()
     return pdf_out
+
+def generate_post_event_pdf(event, actual_spent, actual_attendees, outcomes):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+    
+    Story = []
+    styles = getSampleStyleSheet()
+    
+    styles['Normal'].fontSize = 13
+    styles['Normal'].leading = 18
+    styles['Title'].fontSize = 24
+    styles['Title'].leading = 28
+    styles['Heading2'].fontSize = 18
+    styles['Heading2'].leading = 22
+    
+    # Header
+    logo_path = os.path.join(current_app.root_path, 'static', 'images', 'gmu_logo.png')
+    if os.path.exists(logo_path):
+        Story.append(Image(logo_path, width=80, height=80))
+        Story.append(Spacer(1, 12))
+        
+    Story.append(Paragraph("GM University Event Management", styles['Title']))
+    Story.append(Spacer(1, 6))
+    Story.append(Paragraph("Post-Event Completion Certificate", styles['Title']))
+    Story.append(Spacer(1, 12))
+
+    # Event Details
+    Story.append(Paragraph("Event Overview", styles['Heading2']))
+    Story.append(Spacer(1, 6))
+    Story.append(Paragraph(f"<b>Event ID:</b> {event.event_id}", styles['Normal']))
+    Story.append(Paragraph(f"<b>Title:</b> {event.title}", styles['Normal']))
+    Story.append(Paragraph(f"<b>Organizer:</b> {event.organizer_name}", styles['Normal']))
+    Story.append(Paragraph(f"<b>Date:</b> {event.event_date}", styles['Normal']))
+    Story.append(Spacer(1, 12))
+    
+    # Comparison
+    Story.append(Paragraph("Completion Metrics", styles['Heading2']))
+    Story.append(Spacer(1, 6))
+    
+    data = [
+        ['Metric', 'Proposed', 'Actual'],
+        ['Budget / Spent', f"Rs. {event.budget}", f"Rs. {actual_spent}"],
+        ['Participants', str(event.expected_participants or 'N/A'), str(actual_attendees)]
+    ]
+    t = Table(data, colWidths=[150, 150, 150])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#5C2C16')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,-1), 12),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 12),
+        ('TOPPADDING', (0,0), (-1,-1), 12),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#FDF8ED')),
+        ('GRID', (0,0), (-1,-1), 1, colors.HexColor('#E3B559'))
+    ]))
+    Story.append(t)
+    Story.append(Spacer(1, 24))
+    
+    # Outcomes
+    Story.append(Paragraph("Key Outcomes / Highlights", styles['Heading2']))
+    Story.append(Spacer(1, 6))
+    Story.append(Paragraph(outcomes, styles['Normal']))
+    Story.append(Spacer(1, 24))
+
+    # QR Code
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    from flask import url_for
+    try:
+        verify_url = url_for('events.view', event_id=event.id, _external=True)
+    except RuntimeError:
+        verify_url = f"http://127.0.0.1:5000/events/{event.id}"
+        
+    qr.add_data(verify_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#5C2C16", back_color="#FDF8ED")
+    
+    qr_buffer = BytesIO()
+    img.save(qr_buffer, format="PNG")
+    qr_buffer.seek(0)
+    
+    Story.append(Paragraph("Official University Record", styles['Heading3']))
+    Story.append(Spacer(1, 6))
+    Story.append(Image(qr_buffer, width=80, height=80))
+    
+    def draw_background(canvas, doc):
+        canvas.saveState()
+        canvas.setStrokeColor(colors.HexColor('#5C2C16'))
+        canvas.setLineWidth(3)
+        canvas.rect(20, 20, doc.pagesize[0]-40, doc.pagesize[1]-40, fill=0, stroke=1)
+        canvas.restoreState()
+    
+    doc.build(Story, onFirstPage=draw_background, onLaterPages=draw_background)
+    
+    # Need to return BytesIO object because events.py uses .read()
+    pdf_buffer = BytesIO(buffer.getvalue())
+    buffer.close()
+    pdf_buffer.seek(0)
+    return pdf_buffer
+

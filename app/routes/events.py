@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 from app.models import Event, Approval, Notification, EventComment
 from app import db
 from werkzeug.utils import secure_filename
-from app.utils.pdf_report import generate_approval_pdf
+from app.utils.pdf_report import generate_approval_pdf, generate_post_event_pdf
 from flask import make_response, send_from_directory
 from flask_mail import Message
 from app import mail
@@ -375,3 +375,51 @@ def delete_event(event_id):
     db.session.commit()
     flash(f"Event '{event.title}' was successfully deleted.", 'success')
     return redirect(url_for('dashboard.index'))
+
+@events_bp.route('/<int:event_id>/upload_report', methods=['POST'])
+@login_required
+def upload_report(event_id):
+    event = Event.query.get_or_404(event_id)
+    
+    # Ensure only the organizer (or admin) can upload the report
+    if event.organizer_id != current_user.id and not current_user.is_admin():
+        flash("Only the event organizer can generate the post-event report.", "danger")
+        return redirect(url_for('events.view', event_id=event.id))
+        
+    if event.status != 'Approved':
+        flash("You can only generate a report for an approved event.", "warning")
+        return redirect(url_for('events.view', event_id=event.id))
+        
+    if 'report_files' not in request.files:
+        flash("No file part", "danger")
+        return redirect(url_for('events.view', event_id=event.id))
+        
+    files = request.files.getlist('report_files')
+    if not files or files[0].filename == '':
+        flash("No selected file", "danger")
+        return redirect(url_for('events.view', event_id=event.id))
+        
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+        
+    saved_filenames = []
+    allowed_extensions = {'.pdf', '.jpg', '.jpeg', '.png'}
+    
+    for file in files:
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext in allowed_extensions:
+            filename = secure_filename(f"report_{event.event_id}_{int(datetime.utcnow().timestamp())}_{file.filename}")
+            file_path = os.path.join(upload_folder, filename)
+            file.save(file_path)
+            saved_filenames.append(filename)
+            
+    if saved_filenames:
+        # Join filenames with a comma to store in the single db column
+        event.post_event_report_path = ",".join(saved_filenames)
+        db.session.commit()
+        flash("Post-event proof/images uploaded successfully!", "success")
+    else:
+        flash("Only PDF and Image files (.jpg, .png) are allowed.", "danger")
+        
+    return redirect(url_for('events.view', event_id=event.id))
