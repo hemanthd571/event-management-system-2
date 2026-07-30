@@ -80,10 +80,16 @@
                     {% for file in files %}
                         {% set is_image = file.startswith('data:image/') %}
                         {% if is_image %}
-                            <div style="margin-top: 0.5rem;">
-                                <a href="{{ file }}" target="_blank">
-                                    <img src="{{ file }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color);">
-                                </a>
+                            <div style="margin-top: 0.5rem; text-align: center;">
+                                <img src="{{ file }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('imageModal{{ loop.index }}').style.display='flex'">
+                                <br>
+                                <a href="{{ file }}" download="event_image.png" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;"><i class="fas fa-download"></i> Download</a>
+                                
+                                <!-- The Modal -->
+                                <div id="imageModal{{ loop.index }}" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+                                    <span style="position:absolute; top:20px; right:35px; color:#f1f1f1; font-size:40px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('imageModal{{ loop.index }}').style.display='none'">&times;</span>
+                                    <img src="{{ file }}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                                </div>
                             </div>
                         {% else %}
                             <a href="{{ file }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;" download="event_proof.pdf">
