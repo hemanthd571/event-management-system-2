@@ -76,18 +76,17 @@
                 {% if event.post_event_report_path %}
                     <p style="margin-top: 0;"><i class="fas fa-check-circle" style="color: var(--success);"></i> Completion proof/images have been uploaded.</p>
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    {% set files = event.post_event_report_path.split(',') %}
+                    {% set files = event.post_event_report_path.split('|||') %}
                     {% for file in files %}
-                        {% set file_lower = file | lower %}
-                        {% set is_image = file_lower.endswith('.jpg') or file_lower.endswith('.jpeg') or file_lower.endswith('.png') %}
+                        {% set is_image = file.startswith('data:image/') %}
                         {% if is_image %}
                             <div style="margin-top: 0.5rem;">
-                                <a href="{{ url_for('events.download_attachment', filename=file) }}" target="_blank">
-                                    <img src="{{ url_for('events.download_attachment', filename=file) }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                <a href="{{ file }}" target="_blank">
+                                    <img src="{{ file }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color);">
                                 </a>
                             </div>
                         {% else %}
-                            <a href="{{ url_for('events.download_attachment', filename=file) }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;">
+                            <a href="{{ file }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;" download="event_proof.pdf">
                                 <i class="fas fa-file-download"></i> View Proof
                             </a>
                         {% endif %}

@@ -403,22 +403,29 @@ def upload_report(event_id):
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
         
-    saved_filenames = []
+    saved_files_data = []
     allowed_extensions = {'.pdf', '.jpg', '.jpeg', '.png'}
     
+    import base64
     for file in files:
         ext = os.path.splitext(file.filename)[1].lower()
         if ext in allowed_extensions:
-            filename = secure_filename(f"report_{event.event_id}_{int(datetime.utcnow().timestamp())}_{file.filename}")
-            file_path = os.path.join(upload_folder, filename)
-            file.save(file_path)
-            saved_filenames.append(filename)
+            file_data = file.read()
+            mime_type = "application/octet-stream"
+            if ext == '.pdf':
+                mime_type = "application/pdf"
+            elif ext in {'.jpg', '.jpeg'}:
+                mime_type = "image/jpeg"
+            elif ext == '.png':
+                mime_type = "image/png"
             
-    if saved_filenames:
-        # Join filenames with a comma to store in the single db column
-        new_files_str = ",".join(saved_filenames)
+            base64_str = f"data:{mime_type};base64," + base64.b64encode(file_data).decode('utf-8')
+            saved_files_data.append(base64_str)
+            
+    if saved_files_data:
+        new_files_str = "|||".join(saved_files_data)
         if event.post_event_report_path:
-            event.post_event_report_path += "," + new_files_str
+            event.post_event_report_path += "|||" + new_files_str
         else:
             event.post_event_report_path = new_files_str
         db.session.commit()

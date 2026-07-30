@@ -81,7 +81,7 @@ class Event(db.Model):
     proposal_pdf_path = db.Column(db.String(255))
     budget_pdf_path = db.Column(db.String(255))
     supporting_docs_path = db.Column(db.String(255))
-    post_event_report_path = db.Column(db.String(255))
+    post_event_report_path = db.Column(db.Text(16777215))
     
     status = db.Column(db.String(50), default='Submitted') # Submitted, Pending Faculty Approval, etc.
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
