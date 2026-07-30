@@ -276,7 +276,23 @@ def create():
             notify_approvers(new_event, next_pending_role)
 
         db.session.commit()
-        flash('Event proposal submitted successfully!', 'success')
+        
+        # Check for venue clashes (same date, same venue, approved) and warn student
+        if venue_id:
+            clashes = Event.query.filter(
+                Event.event_date == event_date,
+                Event.venue_id == venue_id,
+                Event.status == 'Approved',
+                Event.id != new_event.id
+            ).all()
+            if clashes:
+                clash_titles = ", ".join([e.title for e in clashes])
+                flash(f"⚠️ Warning: There is a venue clash with the '{clash_titles}' event on this date!", "warning")
+            else:
+                flash('Event proposal submitted successfully!', 'success')
+        else:
+            flash('Event proposal submitted successfully!', 'success')
+            
         return redirect(url_for('dashboard.index'))
 
     from app.models import Department, Venue
@@ -356,7 +372,15 @@ def view(event_id):
             flash(f"An error occurred: {str(e)}", "danger")
             return redirect(url_for('events.view', event_id=event.id))
 
-    return render_template('events/view.html', event=event, approvals=approvals, can_approve=can_approve, current_approval=current_approval, chat_messages=chat_messages)
+    # Check for venue clashes (approved events on same date, same venue)
+    clashing_events = Event.query.filter(
+        Event.event_date == event.event_date,
+        Event.venue_id == event.venue_id,
+        Event.status == 'Approved',
+        Event.id != event.id
+    ).all() if event.venue_id else []
+    
+    return render_template('events/view.html', event=event, approvals=approvals, can_approve=can_approve, current_approval=current_approval, chat_messages=chat_messages, clashing_events=clashing_events)
 
 @events_bp.route('/<int:event_id>/chat', methods=['POST'])
 @login_required

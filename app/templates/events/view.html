@@ -3,6 +3,11 @@
 {% block page_title %}Event Details: {{ event.event_id }}{% endblock %}
 
 {% block content %}
+{% if clashing_events %}
+<div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+    <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> There is a venue clash with the '{% for ce in clashing_events %}{{ ce.title }}{% if not loop.last %}, {% endif %}{% endfor %}' event(s) on this date!
+</div>
+{% endif %}
 <div class="dashboard-stats" style="grid-template-columns: 2fr 1fr;">
     
     <!-- Left Column: Details -->
