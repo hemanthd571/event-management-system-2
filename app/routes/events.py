@@ -78,11 +78,11 @@ def create():
                 cursor.execute('''SELECT * FROM events 
                                   WHERE organizer_id = %s AND status = 'Approved' 
                                   AND event_date < %s 
-                                  AND (post_event_report_path IS NULL OR post_event_report_path = '')''', 
+                                  AND (post_event_report_path IS NULL OR post_event_report_path = '' OR post_event_bill_path IS NULL OR post_event_bill_path = '')''', 
                                (current_user.id, date.today()))
                 missing_events = cursor.fetchall()
                 if missing_events:
-                    flash(f"You cannot create a new event. You have a past event ('{missing_events[0]['title']}') with missing completion proof.", "danger")
+                    flash(f"You cannot create a new event. You have a past event ('{missing_events[0]['title']}') with missing completion proofs (report or bill).", "danger")
                     return redirect(url_for('dashboard.index'))
 
         if request.method == 'POST':
