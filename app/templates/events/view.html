@@ -92,44 +92,50 @@
             <!-- QR Ticket & Feedback Section -->
             <div class="card" style="margin-top: 1.5rem; margin-bottom: 1.5rem; background-color: var(--bg-color); border: 2px solid var(--primary-color);">
                 <h3 style="margin-top: 0; color: var(--text-primary);"><i class="fas fa-ticket-alt"></i> Event Registration & Feedback</h3>
-                {% if not user_registration %}
-                    <p>Register for this event to get your digital ticket!</p>
-                    <form action="{{ url_for('events.register_event', event_id=event.id) }}" method="POST">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Register Now</button>
-                    </form>
+                
+                {% if current_user.id|int == event.organizer_id|int or current_user.is_admin() or current_user.role in ['Director', 'VC', 'Pro VC', 'HOD'] %}
+                    <p style="color: var(--info);"><i class="fas fa-info-circle"></i> As an official ({{ current_user.role }}), registration is not required for you.</p>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Use your mobile device to scan attendee QR codes at the door to check them in.</p>
                 {% else %}
-                    {% if not user_registration.attended %}
-                        <p style="color: var(--success);"><i class="fas fa-check-circle"></i> You are registered!</p>
-                        <p style="color: var(--text-secondary);">Show this QR code to the organizer at the door to check in.</p>
-                        <div style="text-align: center; margin: 1rem 0; padding: 1rem; background: white; border-radius: 8px; display: inline-block;">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ user_registration.qr_token }}" alt="Your Ticket QR Code">
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);"><em>Only Organizers can scan this code using: {{ url_for('events.scan_ticket', event_id=event.id, qr_token=user_registration.qr_token, _external=True) }}</em></p>
+                    {% if not user_registration %}
+                        <p>Register for this event to get your digital ticket!</p>
+                        <form action="{{ url_for('events.register_event', event_id=event.id) }}" method="POST">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Register Now</button>
+                        </form>
                     {% else %}
-                        <p style="color: var(--success);"><i class="fas fa-check-double"></i> You checked in and attended this event.</p>
-                        {% if not user_registration.feedback_submitted %}
-                            <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
-                            <h4>Please Leave Feedback</h4>
-                            <form action="{{ url_for('events.submit_feedback', event_id=event.id) }}" method="POST">
-                                <div style="margin-bottom: 1rem;">
-                                    <label class="form-label">Rating (1 to 5 Stars):</label>
-                                    <select name="rating" class="form-control" required style="max-width: 250px;">
-                                        <option value="">Select rating</option>
-                                        <option value="5">⭐⭐⭐⭐⭐ (5) Excellent</option>
-                                        <option value="4">⭐⭐⭐⭐ (4) Good</option>
-                                        <option value="3">⭐⭐⭐ (3) Average</option>
-                                        <option value="2">⭐⭐ (2) Poor</option>
-                                        <option value="1">⭐ (1) Terrible</option>
-                                    </select>
-                                </div>
-                                <div style="margin-bottom: 1rem;">
-                                    <label class="form-label">Comments:</label>
-                                    <textarea name="comments" class="form-control" rows="3" placeholder="What did you think of the event?"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> Submit Feedback</button>
-                            </form>
+                        {% if not user_registration.attended %}
+                            <p style="color: var(--success);"><i class="fas fa-check-circle"></i> You are registered!</p>
+                            <p style="color: var(--text-secondary);">Show this QR code to the organizer at the door to check in.</p>
+                            <div style="text-align: center; margin: 1rem 0; padding: 1rem; background: white; border-radius: 8px; display: inline-block;">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ user_registration.qr_token }}" alt="Your Ticket QR Code">
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary);"><em>Only Organizers can scan this code using: {{ url_for('events.scan_ticket', event_id=event.id, qr_token=user_registration.qr_token, _external=True) }}</em></p>
                         {% else %}
-                            <p style="color: var(--info);"><i class="fas fa-star"></i> You have submitted your feedback. Thank you!</p>
+                            <p style="color: var(--success);"><i class="fas fa-check-double"></i> You checked in and attended this event.</p>
+                            {% if not user_registration.feedback_submitted %}
+                                <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
+                                <h4>Please Leave Feedback</h4>
+                                <form action="{{ url_for('events.submit_feedback', event_id=event.id) }}" method="POST">
+                                    <div style="margin-bottom: 1rem;">
+                                        <label class="form-label">Rating (1 to 5 Stars):</label>
+                                        <select name="rating" class="form-control" required style="max-width: 250px;">
+                                            <option value="">Select rating</option>
+                                            <option value="5">⭐⭐⭐⭐⭐ (5) Excellent</option>
+                                            <option value="4">⭐⭐⭐⭐ (4) Good</option>
+                                            <option value="3">⭐⭐⭐ (3) Average</option>
+                                            <option value="2">⭐⭐ (2) Poor</option>
+                                            <option value="1">⭐ (1) Terrible</option>
+                                        </select>
+                                    </div>
+                                    <div style="margin-bottom: 1rem;">
+                                        <label class="form-label">Comments:</label>
+                                        <textarea name="comments" class="form-control" rows="3" placeholder="What did you think of the event?"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> Submit Feedback</button>
+                                </form>
+                            {% else %}
+                                <p style="color: var(--info);"><i class="fas fa-star"></i> You have submitted your feedback. Thank you!</p>
+                            {% endif %}
                         {% endif %}
                     {% endif %}
                 {% endif %}
