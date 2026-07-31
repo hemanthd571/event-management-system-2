@@ -147,8 +147,10 @@ def create():
                         flash(f"Failed to submit proposal: There is a venue clash with '{clash['title']}' at this time!", 'danger')
                     return redirect(url_for('events.create'))
 
-                cursor.execute('SELECT COUNT(*) as c FROM events')
-                event_count = cursor.fetchone()['c'] + 1
+                cursor.execute('SELECT MAX(id) as max_id FROM events')
+                max_id_row = cursor.fetchone()
+                max_id = max_id_row['max_id'] if max_id_row['max_id'] is not None else 0
+                event_count = max_id + 1
                 event_id_str = f"EVT-{datetime.now().year}-{event_count:03d}"
                 
                 cursor.execute('SELECT name FROM venues WHERE id = %s', (venue_id,))
