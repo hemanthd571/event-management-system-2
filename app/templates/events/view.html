@@ -107,7 +107,7 @@
                             <p style="color: var(--success);"><i class="fas fa-check-circle"></i> You are registered!</p>
                             <p style="color: var(--text-secondary);">Show this QR code to the organizer at the door to check in.</p>
                             <div style="text-align: center; margin: 1rem 0; padding: 1rem; background: white; border-radius: 8px; display: inline-block;">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ user_registration.qr_token }}" alt="Your Ticket QR Code">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ url_for('events.scan_ticket', event_id=event.id, qr_token=user_registration.qr_token, _external=True) | urlencode }}" alt="Your Ticket QR Code">
                             </div>
                             <p style="font-size: 0.85rem; color: var(--text-secondary);"><em>Only Organizers can scan this code using: {{ url_for('events.scan_ticket', event_id=event.id, qr_token=user_registration.qr_token, _external=True) }}</em></p>
                         {% else %}
