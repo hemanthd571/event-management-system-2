@@ -32,7 +32,7 @@
                         <i class="fas fa-calendar-alt"></i> Calendar
                     </a>
                 </li>
-                {% if current_user.role.name == 'Admin' %}
+                {% if current_user.role == 'Admin' %}
                 <li class="nav-item">
                     <a href="{{ url_for('admin.manage_users') }}" class="nav-link">
                         <i class="fas fa-users"></i> Users
@@ -49,7 +49,7 @@
                 <div class="topbar-actions" style="display: flex; align-items: center; gap: 1rem;">
                     <div style="text-align: right; line-height: 1.2; border-right: 1px solid var(--border-color); padding-right: 1rem;">
                         <span style="display: block; font-weight: 600; color: var(--text-primary); text-transform: capitalize;">{{ current_user.username }}</span>
-                        <span style="display: block; font-size: 0.75rem; color: var(--primary);">{{ current_user.role.name }}</span>
+                        <span style="display: block; font-size: 0.75rem; color: var(--primary);">{{ current_user.role }}</span>
                     </div>
                     <button id="theme-toggle"><i class="fas fa-moon"></i></button>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">Logout</a>

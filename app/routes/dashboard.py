@@ -69,13 +69,13 @@ def index():
         conn.close()
 
     # If the user is a Student/Organizer, only show their own events
-    if current_user.role.name == 'Student/Organizer':
+    if current_user.role == 'Student/Organizer':
         all_events = fetch_events_from_db('SELECT * FROM events WHERE organizer_id = %s ORDER BY created_at DESC', (current_user.id,))
     else:
         all_events = fetch_events_from_db('SELECT * FROM events ORDER BY created_at DESC')
 
     pending_my_approval = []
-    if current_user.role.name in ['Faculty', 'HOD', 'Director', 'Pro VC', 'VC', 'Admin']:
+    if current_user.role in ['Faculty', 'HOD', 'Director', 'Pro VC', 'VC', 'Admin']:
         candidate_events = [e for e in all_events if e.status not in ['Approved', 'Rejected']]
         for event in candidate_events:
             current_app = None
@@ -87,7 +87,7 @@ def index():
             if current_app:
                 if current_user.is_admin():
                     pending_my_approval.append(event)
-                elif current_user.role.name == current_app.required_role:
+                elif current_user.role == current_app.required_role:
                     pending_my_approval.append(event)
         
     context = {
@@ -137,7 +137,7 @@ def api_calendar_events():
 @dashboard_bp.route('/export')
 @login_required
 def export_events():
-    if current_user.role.name == 'Student/Organizer':
+    if current_user.role == 'Student/Organizer':
         events = fetch_events_from_db('SELECT * FROM events WHERE organizer_id = %s ORDER BY created_at DESC', (current_user.id,))
     else:
         events = fetch_events_from_db('SELECT * FROM events ORDER BY created_at DESC')

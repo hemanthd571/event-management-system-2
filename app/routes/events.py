@@ -47,7 +47,7 @@ def index():
 def create():
     conn = get_db_connection()
     try:
-        if current_user.role.name not in ['Admin', 'VC', 'Pro VC']:
+        if current_user.role not in ['Admin', 'VC', 'Pro VC']:
             with conn.cursor() as cursor:
                 cursor.execute('''SELECT * FROM events 
                                   WHERE organizer_id = %s AND status = 'Approved' 
@@ -136,10 +136,10 @@ def view(event_id):
 
     can_approve = False
     current_approval = None
-    if current_user.role.name not in ['Student/Organizer', 'Admin']:
+    if current_user.role not in ['Student/Organizer', 'Admin']:
         for app in event.approvals:
             if app.status in ['Pending', 'Returned for Correction']:
-                if app.required_role == current_user.role.name:
+                if app.required_role == current_user.role:
                     can_approve = True
                     current_approval = app
                 break
@@ -158,7 +158,7 @@ def approve(event_id):
             action = request.form.get('action')
             comments = request.form.get('comments')
             cursor.execute('UPDATE approvals SET status=%s, comments=%s WHERE event_id=%s AND required_role=%s AND status=%s',
-                           (action, comments, event_id, current_user.role.name, 'Pending'))
+                           (action, comments, event_id, current_user.role, 'Pending'))
             
             if action == 'Approved':
                 cursor.execute('UPDATE events SET status=%s WHERE id=%s', ('Approved', event_id))

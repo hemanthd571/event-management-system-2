@@ -202,7 +202,7 @@
 
         {% if can_approve %}
         <div class="card">
-            <h3 style="margin-top: 0;">Take Action as {{ current_user.role.name }}</h3>
+            <h3 style="margin-top: 0;">Take Action as {{ current_user.role }}</h3>
             <form method="POST">
                 <div class="form-group">
                     <label class="form-label">Comments</label>
@@ -229,7 +229,7 @@
             {% for msg in chat_messages %}
             <div style="display: flex; flex-direction: column; max-width: 80%; {% if msg.user_id == current_user.id %}align-self: flex-end;{% else %}align-self: flex-start;{% endif %}">
                 <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem; {% if msg.user_id == current_user.id %}text-align: right;{% endif %}">
-                    <strong>{{ msg.user.username }}</strong> ({{ msg.user.role.name }}) - {{ msg.created_at.strftime('%b %d, %H:%M') }}
+                    <strong>{{ msg.user.username }}</strong> ({{ msg.user.role }}) - {{ msg.created_at.strftime('%b %d, %H:%M') }}
                 </div>
                 <div style="padding: 0.75rem 1rem; border-radius: 8px; {% if msg.user_id == current_user.id %}background-color: var(--primary-color); color: var(--text-primary);{% else %}background-color: #f1f1f1; color: #333;{% endif %}">
                     {{ msg.message }}

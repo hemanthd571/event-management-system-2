@@ -22,14 +22,14 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="role_id">Role</label>
-            <select class="form-control" id="role_id" name="role_id" required {% if user.username == 'admin' %}disabled{% endif %}>
+            <label class="form-label" for="role">Role</label>
+            <select class="form-control" id="role" name="role" required {% if user.username == 'admin' %}disabled{% endif %}>
                 {% for role in roles %}
-                <option value="{{ role.id }}" {% if user.role_id == role.id %}selected{% endif %}>{{ role.name }}</option>
+                <option value="{{ role }}" {% if user.role == role %}selected{% endif %}>{{ role }}</option>
                 {% endfor %}
             </select>
             {% if user.username == 'admin' %}
-            <input type="hidden" name="role_id" value="{{ user.role_id }}">
+            <input type="hidden" name="role" value="{{ user.role }}">
             <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">Admin role cannot be changed.</small>
             {% endif %}
         </div>
@@ -56,7 +56,7 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const roleSelect = document.getElementById('role_id');
+        const roleSelect = document.getElementById('role');
         const deptGroup = document.getElementById('department-group');
         const deptSelect = document.getElementById('department_id');
 

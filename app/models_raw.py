@@ -1,11 +1,6 @@
 from flask_login import UserMixin
 from app.db_manager import get_db_connection
 
-class Role:
-    def __init__(self, **kwargs):
-        self.id = kwargs.get('id')
-        self.name = kwargs.get('name')
-        self.description = kwargs.get('description')
 
 class Department:
     def __init__(self, **kwargs):
@@ -19,8 +14,8 @@ class User(UserMixin):
         self.username = kwargs.get('username')
         self.email = kwargs.get('email')
         self.password_hash = kwargs.get('password_hash')
-        self.is_active = kwargs.get('is_active', True)
-        self.role_id = kwargs.get('role_id')
+        self._is_active = kwargs.get('is_active', True)
+
         self.department_id = kwargs.get('department_id')
         
         # Relations
@@ -28,11 +23,16 @@ class User(UserMixin):
         self.department = kwargs.get('department')
         
     def is_admin(self):
-        return self.role and self.role.name == 'Admin'
+        return self.role == 'Admin'
+
+from datetime import time, timedelta
 
 class Event:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
+            if isinstance(value, timedelta):
+                s = int(value.total_seconds())
+                value = time(hour=s//3600, minute=(s%3600)//60, second=s%60)
             setattr(self, key, value)
             
         # Relations

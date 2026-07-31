@@ -13,8 +13,8 @@
         <thead>
             <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
                 <th style="padding: 1rem 0;">Username</th>
-                <th style="padding: 1rem 0;">Email</th>
                 <th style="padding: 1rem 0;">Role</th>
+                <th style="padding: 1rem 0;">Email</th>
                 <th style="padding: 1rem 0;">Department</th>
                 <th style="padding: 1rem 0;">Status</th>
                 <th style="padding: 1rem 0;">Actions</th>
@@ -24,10 +24,10 @@
             {% for user in users %}
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 1rem 0;">{{ user.username }}</td>
-                <td style="padding: 1rem 0;">{{ user.email }}</td>
                 <td style="padding: 1rem 0;">
-                    <span class="badge" style="background-color: rgba(227, 181, 89, 0.15); color: var(--accent-color); border: 1px solid var(--border-color);">{{ user.role.name }}</span>
+                    <span class="badge" style="background-color: rgba(227, 181, 89, 0.15); color: var(--accent-color); border: 1px solid var(--border-color);">{{ user.role }}</span>
                 </td>
+                <td style="padding: 1rem 0;">{{ user.email }}</td>
                 <td style="padding: 1rem 0;">
                     {{ user.department.name if user.department else 'N/A' }}
                 </td>
