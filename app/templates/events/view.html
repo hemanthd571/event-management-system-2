@@ -141,6 +141,7 @@
                 {% endif %}
             </div>
 
+            {% if current_user.id|int == event.organizer_id|int or current_user.is_admin() or current_user.role in ['Faculty', 'HOD', 'Director', 'Pro VC', 'VC'] %}
             <h3 style="margin-top: 2rem;">Post-Event Completion Proof</h3>
             <div style="padding: 1rem; border: 1px dashed var(--border-color); border-radius: 8px; background-color: rgba(255, 255, 255, 0.05);">
                 {% if event.post_event_report_path or event.post_event_bill_path %}
@@ -226,6 +227,7 @@
                     {% endif %}
                 {% endif %}
             </div>
+            {% endif %}
             {% endif %}
         </div>
     </div>
