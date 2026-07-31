@@ -1,50 +1,85 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, url_for, Response
 from flask_login import login_required, current_user
-from app.models import Event, Notification, Department
-from app import db
-from sqlalchemy import func
+from app.dal import get_db_connection
+from app.models_raw import Event, Department, Approval
+import csv
+import io
+import datetime
 
 dashboard_bp = Blueprint('dashboard', __name__)
+
+def fetch_events_from_db(query, params=None):
+    conn = get_db_connection()
+    events = []
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, params or ())
+            for row in cursor.fetchall():
+                event = Event(**row)
+                
+                # Fetch approvals for this event
+                cursor.execute('SELECT * FROM approvals WHERE event_id = %s ORDER BY level', (event.id,))
+                event.approvals = [Approval(**arow) for arow in cursor.fetchall()]
+                
+                events.append(event)
+    finally:
+        conn.close()
+    return events
 
 @dashboard_bp.route('/')
 @login_required
 def index():
-    # Calculate Total Approved Budget
-    total_budget = db.session.query(func.sum(Event.budget)).filter(Event.status == 'Approved').scalar() or 0.0
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Calculate Total Approved Budget
+            cursor.execute('SELECT SUM(budget) as total FROM events WHERE status = %s', ('Approved',))
+            row = cursor.fetchone()
+            total_budget = float(row['total'] or 0.0) if row else 0.0
 
-    # Get Budget by Department for Chart
-    dept_budgets = db.session.query(
-        Department.name, 
-        func.sum(Event.budget)
-    ).join(Event, Department.id == Event.department_id).filter(Event.status == 'Approved').group_by(Department.name).all()
-    
-    chart_labels = [row[0] for row in dept_budgets]
-    chart_data = [float(row[1] or 0) for row in dept_budgets]
-    
-    # Get Budget by Event Category for Chart
-    cat_budgets = db.session.query(
-        Event.event_category, 
-        func.sum(Event.budget)
-    ).filter(Event.status == 'Approved').group_by(Event.event_category).all()
-    
-    cat_chart_labels = [row[0] for row in cat_budgets]
-    cat_chart_data = [float(row[1] or 0) for row in cat_budgets]
+            # Get Budget by Department
+            cursor.execute('''SELECT d.name, SUM(e.budget) as total 
+                              FROM events e JOIN departments d ON e.department_id = d.id 
+                              WHERE e.status = %s GROUP BY d.name''', ('Approved',))
+            dept_budgets = cursor.fetchall()
+            chart_labels = [row['name'] for row in dept_budgets]
+            chart_data = [float(row['total'] or 0) for row in dept_budgets]
+            
+            # Get Budget by Event Category
+            cursor.execute('''SELECT event_category, SUM(budget) as total 
+                              FROM events WHERE status = %s GROUP BY event_category''', ('Approved',))
+            cat_budgets = cursor.fetchall()
+            cat_chart_labels = [row['event_category'] for row in cat_budgets]
+            cat_chart_data = [float(row['total'] or 0) for row in cat_budgets]
+            
+            # Basic counts
+            cursor.execute('SELECT COUNT(*) as c FROM events')
+            total_events = cursor.fetchone()['c']
+            
+            cursor.execute('SELECT COUNT(*) as c FROM events WHERE status != %s AND status != %s', ('Approved', 'Rejected'))
+            pending_events = cursor.fetchone()['c']
+            
+            cursor.execute('SELECT COUNT(*) as c FROM events WHERE status = %s', ('Approved',))
+            approved_events = cursor.fetchone()['c']
+            
+            cursor.execute('SELECT COUNT(*) as c FROM events WHERE status = %s', ('Rejected',))
+            rejected_events = cursor.fetchone()['c']
+            
+    finally:
+        conn.close()
 
     # If the user is a Student/Organizer, only show their own events
     if current_user.role.name == 'Student/Organizer':
-        events_query = Event.query.filter_by(organizer_id=current_user.id)
+        all_events = fetch_events_from_db('SELECT * FROM events WHERE organizer_id = %s ORDER BY created_at DESC', (current_user.id,))
     else:
-        events_query = Event.query
+        all_events = fetch_events_from_db('SELECT * FROM events ORDER BY created_at DESC')
 
     pending_my_approval = []
     if current_user.role.name in ['Faculty', 'HOD', 'Director', 'Pro VC', 'VC', 'Admin']:
-        candidate_events = Event.query.filter(Event.status.notin_(['Approved', 'Rejected'])).all()
+        candidate_events = [e for e in all_events if e.status not in ['Approved', 'Rejected']]
         for event in candidate_events:
-            sorted_approvals = sorted(event.approvals, key=lambda a: a.level)
             current_app = None
-            
-            # Find the first pending approval in the hierarchy
-            for app in sorted_approvals:
+            for app in event.approvals:
                 if app.status in ['Pending', 'Returned for Correction']:
                     current_app = app
                     break
@@ -56,11 +91,11 @@ def index():
                     pending_my_approval.append(event)
         
     context = {
-        'total_events': Event.query.count(),
-        'pending_events': Event.query.filter(Event.status != 'Approved', Event.status != 'Rejected').count(),
-        'approved_events': Event.query.filter_by(status='Approved').count(),
-        'rejected_events': Event.query.filter_by(status='Rejected').count(),
-        'all_events': events_query.order_by(Event.created_at.desc()).all(),
+        'total_events': total_events,
+        'pending_events': pending_events,
+        'approved_events': approved_events,
+        'rejected_events': rejected_events,
+        'all_events': all_events,
         'pending_my_approval': pending_my_approval,
         'total_budget': total_budget,
         'chart_labels': chart_labels,
@@ -69,8 +104,6 @@ def index():
         'cat_chart_data': cat_chart_data
     }
     return render_template('dashboard/index.html', **context)
-
-from flask import url_for
 
 @dashboard_bp.route('/calendar')
 @login_required
@@ -82,34 +115,32 @@ def calendar():
 def api_calendar_events():
     event_type = request.args.get('type')
     
-    # Only show approved events on the calendar
-    query = Event.query.filter_by(status='Approved')
+    query = 'SELECT * FROM events WHERE status = %s'
+    params = ['Approved']
     
     if event_type:
-        query = query.filter_by(event_type=event_type)
+        query += ' AND event_type = %s'
+        params.append(event_type)
         
-    approved_events = query.all()
+    approved_events = fetch_events_from_db(query, tuple(params))
+    
     events_data = []
     for event in approved_events:
         events_data.append({
             'id': event.id,
             'title': event.title,
-            'start': event.event_date.strftime('%Y-%m-%d'),
+            'start': event.event_date.strftime('%Y-%m-%d') if event.event_date else '',
             'url': url_for('events.view', event_id=event.id)
         })
     return jsonify(events_data)
-
-import csv
-import io
-from flask import Response
 
 @dashboard_bp.route('/export')
 @login_required
 def export_events():
     if current_user.role.name == 'Student/Organizer':
-        events = Event.query.filter_by(organizer_id=current_user.id).order_by(Event.created_at.desc()).all()
+        events = fetch_events_from_db('SELECT * FROM events WHERE organizer_id = %s ORDER BY created_at DESC', (current_user.id,))
     else:
-        events = Event.query.order_by(Event.created_at.desc()).all()
+        events = fetch_events_from_db('SELECT * FROM events ORDER BY created_at DESC')
         
     output = io.StringIO()
     writer = csv.writer(output)

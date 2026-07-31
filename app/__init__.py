@@ -1,13 +1,9 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
 from config import Config
 
-db = SQLAlchemy()
-migrate = Migrate()
 login_manager = LoginManager()
 mail = Mail()
 login_manager.login_view = 'auth.login'
@@ -17,8 +13,6 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    db.init_app(app)
-    migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
 
@@ -32,18 +26,8 @@ def create_app(config_class=Config):
     app.register_blueprint(events_bp)
     app.register_blueprint(admin_bp)
     
-    # Ensure upload folder exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    # Automatically apply database migrations on startup
-    with app.app_context():
-        from flask_migrate import upgrade
-        try:
-            upgrade()
-        except Exception as e:
-            print(f"Auto-migration failed: {e}")
-
-    # Start the background scheduler for automated reminders
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         from apscheduler.schedulers.background import BackgroundScheduler
         import atexit
@@ -57,29 +41,37 @@ def create_app(config_class=Config):
 
 def check_and_send_reminders(app):
     with app.app_context():
-        from app.models import Event, User
-        from app import db
+        from app.db_manager import get_db_connection
         from datetime import date, timedelta
         from app.routes.events import send_email_notification
         
         target_date = date.today() - timedelta(days=3)
         
-        events_to_remind = Event.query.filter(
-            Event.status == 'Approved',
-            Event.event_date <= target_date,
-            Event.reminder_sent == False
-        ).all()
-        
-        for event in events_to_remind:
-            if not event.post_event_report_path:
-                organizer = User.query.get(event.organizer_id)
-                if organizer:
-                    # Mark as sent first to prevent race conditions
-                    event.reminder_sent = True
-                    db.session.commit()
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    '''SELECT e.id, e.title, e.event_date, u.email, u.username, e.organizer_id 
+                       FROM events e 
+                       JOIN users u ON e.organizer_id = u.id 
+                       WHERE e.status = 'Approved' 
+                       AND e.event_date <= %s 
+                       AND e.reminder_sent = 0 
+                       AND (e.post_event_report_path IS NULL OR e.post_event_report_path = '')''',
+                    (target_date,)
+                )
+                events_to_remind = cursor.fetchall()
+                
+                for event in events_to_remind:
+                    cursor.execute('UPDATE events SET reminder_sent = 1 WHERE id = %s', (event['id'],))
+                    conn.commit()
                     
                     send_email_notification(
-                        organizer.email,
+                        event['email'],
                         "Action Required: Missing Event Proof",
-                        f"Dear {organizer.username},\n\nPlease upload your event proof immediately for the event '{event.title}' which occurred on {event.event_date}."
+                        f"Dear {event['username']},\n\nPlease upload your event proof immediately for the event '{event['title']}' which occurred on {event['event_date']}."
                     )
+        except Exception as e:
+            pass
+        finally:
+            conn.close()
