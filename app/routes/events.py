@@ -428,7 +428,6 @@ def delete_event(event_id):
         conn.close()
     flash('Event deleted.', 'success')
     return redirect(url_for('dashboard.index'))
-
 import os
 from werkzeug.utils import secure_filename
 from flask import current_app, send_from_directory
@@ -437,7 +436,7 @@ from flask import current_app, send_from_directory
 @login_required
 def download_uploaded_file(filename):
     upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-    return send_from_directory(upload_folder, filename)
+    return send_from_directory(upload_folder, filename, as_attachment=True)
 
 @events_bp.route('/<int:event_id>/upload_report', methods=['POST'])
 @login_required
