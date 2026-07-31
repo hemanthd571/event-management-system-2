@@ -77,8 +77,8 @@ def create():
     from datetime import date
     from sqlalchemy import or_
     
-    # Check if the user has any past approved events without completion proof (Skip for Admin)
-    if not current_user.is_admin():
+    # Check if the user has any past approved events without completion proof (Skip for Admin, VC, Pro VC)
+    if current_user.role.name not in ['Admin', 'VC', 'Pro VC']:
         past_missing_events = Event.query.filter(
             Event.organizer_id == current_user.id,
             Event.status == 'Approved',
