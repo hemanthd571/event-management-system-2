@@ -199,7 +199,7 @@
                         <p style="margin-top: 1rem; color: var(--text-secondary);">Waiting for the organizer to upload remaining documents.</p>
                     {% endif %}
                     
-                    {% if current_user.id|int == event.organizer_id|int or current_user.is_admin() %}
+                    {% if current_user.id|int == event.organizer_id|int or current_user.is_admin() or current_user.role in ['Student/Organizer', 'Faculty', 'HOD', 'Director', 'Pro VC', 'VC'] %}
                     <form action="{{ url_for('events.upload_report', event_id=event.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 300px;">
                         {% if not event.post_event_report_path %}
                         <label class="form-label">Upload Proof & Images (PDF, JPG, PNG)</label>
