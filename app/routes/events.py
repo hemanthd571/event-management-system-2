@@ -179,12 +179,16 @@ def create():
         from app.models import Venue
         venue_obj = Venue.query.get(venue_id) if venue_id else None
         venue_name = venue_obj.name if venue_obj else request.form.get('venue')
+        
+        event_category = request.form.get('event_category')
+        if event_category == 'Other':
+            event_category = request.form.get('other_event_category')
 
         new_event = Event(
             event_id=event_id_str,
             title=request.form.get('title'),
             event_type=request.form.get('event_type'),
-            event_category=request.form.get('event_category'),
+            event_category=event_category,
             organizer_name=request.form.get('organizer_name'),
             faculty_coordinator=request.form.get('faculty_coordinator'),
             event_date=event_date,

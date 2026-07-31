@@ -22,7 +22,7 @@
             
             <div class="form-group">
                 <label class="form-label">Event Category</label>
-                <select class="form-control" name="event_category" required>
+                <select class="form-control" name="event_category" id="event_category" required>
                     <option value="Seminar/Workshop">Seminar/Workshop</option>
                     <option value="Cultural Fest">Cultural Fest</option>
                     <option value="Tech Fest">Tech Fest</option>
@@ -30,6 +30,7 @@
                     <option value="Guest Lecture">Guest Lecture</option>
                     <option value="Other">Other</option>
                 </select>
+                <input type="text" class="form-control" name="other_event_category" id="other_event_category" placeholder="Please specify the event category" style="display: none; margin-top: 10px;">
             </div>
 
             <div class="form-group" id="department-group">
@@ -129,6 +130,7 @@
         const deptGroup = document.getElementById('department-group');
         const dateInput = document.querySelector('input[name="event_date"]');
         
+        // Event Type (University/Department) logic
         function toggleDepartment() {
             if (eventTypeSelect.value === 'University Level') {
                 deptGroup.style.display = 'none';
@@ -137,11 +139,27 @@
             }
         }
         
+        // Event Category (Other) logic
+        const categorySelect = document.getElementById('event_category');
+        const otherCategoryInput = document.getElementById('other_event_category');
+        
+        function toggleOtherCategory() {
+            if (categorySelect.value === 'Other') {
+                otherCategoryInput.style.display = 'block';
+                otherCategoryInput.required = true;
+            } else {
+                otherCategoryInput.style.display = 'none';
+                otherCategoryInput.required = false;
+            }
+        }
+        
         // Run on load
         toggleDepartment();
+        toggleOtherCategory();
         
         // Run on change
         eventTypeSelect.addEventListener('change', toggleDepartment);
+        categorySelect.addEventListener('change', toggleOtherCategory);
     });
 </script>
 {% endblock %}
