@@ -8,7 +8,7 @@ def role_required(*roles):
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
                 return abort(401)
-            if current_user.role.name not in roles and current_user.role.name != 'Admin':
+            if current_user.role not in roles and current_user.role != 'Admin':
                 return abort(403)
             return f(*args, **kwargs)
         return decorated_function

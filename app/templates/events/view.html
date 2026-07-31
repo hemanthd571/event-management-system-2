@@ -4,8 +4,8 @@
 
 {% block content %}
 {% if clashing_events %}
-<div class="alert alert-warning" style="margin-bottom: 1.5rem;">
-    <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> There is a venue clash with the '{% for ce in clashing_events %}{{ ce.title }}{% if not loop.last %}, {% endif %}{% endfor %}' event(s) on this date!
+<div class="alert {% if event.event_type == 'Department Level' %}alert-danger{% else %}alert-warning{% endif %}" style="margin-bottom: 1.5rem; {% if event.event_type == 'Department Level' %}background-color: var(--danger); color: white; border-color: darkred;{% endif %}">
+    <i class="fas fa-exclamation-triangle"></i> <strong>{% if event.event_type == 'Department Level' %}Clash Detected{% else %}Warning{% endif %}:</strong> There is a venue clash with the '{% for ce in clashing_events %}{{ ce.title }}{% if not loop.last %}, {% endif %}{% endfor %}' event(s) on this date!
 </div>
 {% endif %}
 <div class="dashboard-stats" style="grid-template-columns: 2fr 1fr;">
@@ -97,21 +97,21 @@
                     {% if event.post_event_report_path %}
                         {% set files = event.post_event_report_path.split('|||') %}
                         {% for file in files %}
-                            {% set is_image = file.startswith('data:image/') %}
+                            {% set is_image = file.startswith('data:image/') or file.endswith('.jpg') or file.endswith('.jpeg') or file.endswith('.png') or file.endswith('.gif') %}
                             {% if is_image %}
                                 <div style="margin-top: 0.5rem; text-align: center;">
-                                    <img src="{{ file }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('imageModal{{ loop.index }}').style.display='flex'">
+                                    <img src="{{ url_for('events.download_uploaded_file', filename=file) }}" alt="Event Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('imageModal{{ loop.index }}').style.display='flex'">
                                     <br>
-                                    <a href="{{ file }}" download="event_image.png" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;"><i class="fas fa-download"></i> Download</a>
+                                    <a href="{{ url_for('events.download_uploaded_file', filename=file) }}" download="{{ file }}" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;"><i class="fas fa-download"></i> Download</a>
                                     
                                     <!-- The Modal -->
                                     <div id="imageModal{{ loop.index }}" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
                                         <span style="position:absolute; top:20px; right:35px; color:#f1f1f1; font-size:40px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('imageModal{{ loop.index }}').style.display='none'">&times;</span>
-                                        <img src="{{ file }}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                                        <img src="{{ url_for('events.download_uploaded_file', filename=file) }}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
                                     </div>
                                 </div>
                             {% else %}
-                                <a href="{{ file }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;" download="event_proof.pdf">
+                                <a href="{{ url_for('events.download_uploaded_file', filename=file) }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;" download="{{ file }}">
                                     <i class="fas fa-file-download"></i> View Proof
                                 </a>
                             {% endif %}
@@ -119,19 +119,20 @@
                     {% endif %}
                     
                     {% if event.post_event_bill_path %}
-                        {% if event.post_event_bill_path.startswith('data:image/') %}
+                        {% set is_bill_image = event.post_event_bill_path.startswith('data:image/') or event.post_event_bill_path.endswith('.jpg') or event.post_event_bill_path.endswith('.jpeg') or event.post_event_bill_path.endswith('.png') or event.post_event_bill_path.endswith('.gif') %}
+                        {% if is_bill_image %}
                             <div style="margin-top: 0.5rem; text-align: center;">
-                                <img src="{{ event.post_event_bill_path }}" alt="Budget Bill Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('budgetImageModal').style.display='flex'">
+                                <img src="{{ url_for('events.download_uploaded_file', filename=event.post_event_bill_path) }}" alt="Budget Bill Image" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('budgetImageModal').style.display='flex'">
                                 <br>
-                                <a href="{{ event.post_event_bill_path }}" download="detailed_budget_bill.png" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;"><i class="fas fa-download"></i> Download Budget Bill</a>
+                                <a href="{{ url_for('events.download_uploaded_file', filename=event.post_event_bill_path) }}" download="{{ event.post_event_bill_path }}" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none;"><i class="fas fa-download"></i> Download Budget Bill</a>
                                 
                                 <div id="budgetImageModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
                                     <span style="position:absolute; top:20px; right:35px; color:#f1f1f1; font-size:40px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('budgetImageModal').style.display='none'">&times;</span>
-                                    <img src="{{ event.post_event_bill_path }}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                                    <img src="{{ url_for('events.download_uploaded_file', filename=event.post_event_bill_path) }}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
                                 </div>
                             </div>
                         {% else %}
-                            <a href="{{ event.post_event_bill_path }}" target="_blank" class="btn btn-primary" download="detailed_budget_bill.pdf" style="background-color: var(--info); border: none; align-self: center;">
+                            <a href="{{ url_for('events.download_uploaded_file', filename=event.post_event_bill_path) }}" target="_blank" class="btn btn-primary" download="{{ event.post_event_bill_path }}" style="background-color: var(--info); border: none; align-self: center;">
                                 <i class="fas fa-file-pdf"></i> Detailed Budget Bill
                             </a>
                         {% endif %}
@@ -203,7 +204,7 @@
         {% if can_approve %}
         <div class="card">
             <h3 style="margin-top: 0;">Take Action as {{ current_user.role }}</h3>
-            <form method="POST">
+            <form method="POST" action="{{ url_for('events.approve', event_id=event.id) }}">
                 <div class="form-group">
                     <label class="form-label">Comments</label>
                     <textarea name="comments" class="form-control" rows="3" required></textarea>
