@@ -81,7 +81,7 @@
                         </a>
                     {% endif %}
                 {% else %}
-                    <a href="{{ url_for('events.download_attachment', filename=event.proposal_pdf_path) }}" target="_blank" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <a href="{{ url_for('events.download_uploaded_file', filename=event.proposal_pdf_path) }}" class="btn" style="border: 1px solid var(--border-color); color: var(--text-primary);" download="{{ event.proposal_pdf_path }}">
                         <i class="fas fa-file-pdf"></i> Proposal PDF
                     </a>
                 {% endif %}
