@@ -22,11 +22,13 @@
                         <i class="fas fa-home"></i> Dashboard
                     </a>
                 </li>
+                {% if current_user.role.name != 'Admin' %}
                 <li class="nav-item">
                     <a href="{{ url_for('events.create') }}" class="nav-link">
                         <i class="fas fa-plus"></i> New Proposal
                     </a>
                 </li>
+                {% endif %}
                 <li class="nav-item">
                     <a href="{{ url_for('dashboard.calendar') }}" class="nav-link">
                         <i class="fas fa-calendar-alt"></i> Calendar

@@ -57,9 +57,14 @@ def delete_user(user_id):
         flash('Cannot delete the master admin account.', 'danger')
         return redirect(url_for('admin.manage_users'))
         
-    db.session.delete(user)
-    db.session.commit()
-    flash(f'User {user.username} deleted.', 'success')
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'User {user.username} deleted.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Cannot delete user {user.username} because they have associated events or records.', 'danger')
+        
     return redirect(url_for('admin.manage_users'))
 
 @admin_bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
