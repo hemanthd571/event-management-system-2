@@ -68,9 +68,9 @@ def index():
     finally:
         conn.close()
 
-    # If the user is a Student/Organizer, only show their own events
+    # If the user is a Student/Organizer, show their own events AND all approved events
     if current_user.role == 'Student/Organizer':
-        all_events = fetch_events_from_db('SELECT * FROM events WHERE organizer_id = %s ORDER BY created_at DESC', (current_user.id,))
+        all_events = fetch_events_from_db('SELECT * FROM events WHERE status = %s OR organizer_id = %s ORDER BY created_at DESC', ('Approved', current_user.id))
     else:
         all_events = fetch_events_from_db('SELECT * FROM events ORDER BY created_at DESC')
 
@@ -138,7 +138,7 @@ def api_calendar_events():
 @login_required
 def export_events():
     if current_user.role == 'Student/Organizer':
-        events = fetch_events_from_db('SELECT * FROM events WHERE organizer_id = %s ORDER BY created_at DESC', (current_user.id,))
+        events = fetch_events_from_db('SELECT * FROM events WHERE status = %s OR organizer_id = %s ORDER BY created_at DESC', ('Approved', current_user.id))
     else:
         events = fetch_events_from_db('SELECT * FROM events ORDER BY created_at DESC')
         
