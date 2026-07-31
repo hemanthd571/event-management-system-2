@@ -142,14 +142,12 @@
                 
                 {% if not event.post_event_report_path or not event.post_event_bill_path %}
                     {% if not event.post_event_report_path and not event.post_event_bill_path %}
-                    <p style="margin-top: 0; color: var(--text-secondary);">No completion proof or budget bills have been uploaded yet.</p>
-                    {% elif current_user.id == event.organizer_id or current_user.is_admin() %}
-                    <p style="margin-top: 1rem; color: var(--text-secondary);">You can upload missing documents below.</p>
+                        <p style="margin-top: 0; color: var(--text-secondary);">No completion proof or budget bills have been uploaded yet.</p>
                     {% else %}
-                    <p style="margin-top: 1rem; color: var(--text-secondary);">Waiting for the organizer to upload remaining documents.</p>
+                        <p style="margin-top: 1rem; color: var(--text-secondary);">Waiting for the organizer to upload remaining documents.</p>
                     {% endif %}
                     
-                    {% if current_user.id == event.organizer_id or current_user.is_admin() %}
+                    {% if current_user.id|int == event.organizer_id|int or current_user.is_admin() %}
                     <form action="{{ url_for('events.upload_report', event_id=event.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 300px;">
                         {% if not event.post_event_report_path %}
                         <label class="form-label">Upload Proof & Images (PDF, JPG, PNG)</label>
