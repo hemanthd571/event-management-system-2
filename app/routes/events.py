@@ -7,6 +7,7 @@ from datetime import datetime, date
 import os
 import pymysql
 import io
+import uuid
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from flask import send_file
@@ -293,6 +294,9 @@ def view(event_id):
                     AND end_time > %s
                 ''', (event.venue_id, event.event_date, event.id, event.end_time, event.start_time))
             clashing_events = cursor.fetchall()
+            
+            cursor.execute('SELECT * FROM event_registrations WHERE event_id = %s AND user_id = %s', (event_id, current_user.id))
+            user_registration = cursor.fetchone()
     finally:
         conn.close()
 
@@ -308,7 +312,8 @@ def view(event_id):
 
     return render_template('events/view.html', event=event, approvals=event.approvals, 
                            can_approve=can_approve, current_approval=current_approval, 
-                           chat_messages=chats, clashing_events=clashing_events)
+                           chat_messages=chats, clashing_events=clashing_events,
+                           user_registration=user_registration)
 
 @events_bp.route('/<int:event_id>/approve', methods=['POST'])
 @login_required
@@ -512,3 +517,102 @@ def download_pdf(event_id):
     
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name=f"certificate_{event_id}.pdf", mimetype='application/pdf')
+
+@events_bp.route('/<int:event_id>/register', methods=['POST'])
+@login_required
+def register_event(event_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Check if event exists and is Approved
+            cursor.execute('SELECT status FROM events WHERE id = %s', (event_id,))
+            ev = cursor.fetchone()
+            if not ev or ev['status'] != 'Approved':
+                flash('Cannot register for this event.', 'danger')
+                return redirect(url_for('events.view', event_id=event_id))
+            
+            # Check if already registered
+            cursor.execute('SELECT id FROM event_registrations WHERE event_id = %s AND user_id = %s', (event_id, current_user.id))
+            if cursor.fetchone():
+                flash('You are already registered for this event.', 'info')
+                return redirect(url_for('events.view', event_id=event_id))
+            
+            qr_token = str(uuid.uuid4())
+            cursor.execute('''
+                INSERT INTO event_registrations (event_id, user_id, qr_token) 
+                VALUES (%s, %s, %s)
+            ''', (event_id, current_user.id, qr_token))
+            conn.commit()
+            flash('Successfully registered! Your QR code ticket is ready.', 'success')
+    except Exception as e:
+        flash(f'Error registering: {str(e)}', 'danger')
+    finally:
+        conn.close()
+    return redirect(url_for('events.view', event_id=event_id))
+
+@events_bp.route('/<int:event_id>/scan/<qr_token>')
+@login_required
+def scan_ticket(event_id, qr_token):
+    # Only Admin or Organizer can scan
+    event = fetch_event(event_id)
+    if not event:
+        abort(404)
+        
+    if current_user.id != event.organizer_id and not current_user.is_admin():
+        abort(403)
+        
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Find the registration
+            cursor.execute('SELECT r.id, r.attended, u.username FROM event_registrations r JOIN users u ON r.user_id = u.id WHERE r.event_id = %s AND r.qr_token = %s', (event_id, qr_token))
+            reg = cursor.fetchone()
+            if not reg:
+                flash('Invalid or expired QR code.', 'danger')
+                return redirect(url_for('events.view', event_id=event_id))
+            
+            if reg['attended']:
+                flash(f"Student {reg['username']} has already checked in.", 'info')
+            else:
+                cursor.execute('UPDATE event_registrations SET attended = TRUE WHERE id = %s', (reg['id'],))
+                conn.commit()
+                flash(f"Success! Student {reg['username']} marked as Present.", 'success')
+    finally:
+        conn.close()
+        
+    return render_template('events/scan.html', event=event)
+
+@events_bp.route('/<int:event_id>/feedback', methods=['POST'])
+@login_required
+def submit_feedback(event_id):
+    rating = request.form.get('rating')
+    comments = request.form.get('comments')
+    
+    if not rating:
+        flash('Rating is required.', 'danger')
+        return redirect(url_for('events.view', event_id=event_id))
+        
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT id, attended, feedback_submitted FROM event_registrations WHERE event_id = %s AND user_id = %s', (event_id, current_user.id))
+            reg = cursor.fetchone()
+            
+            if not reg:
+                flash('You must register for this event first.', 'danger')
+            elif not reg['attended']:
+                flash('You must attend the event and be checked in to leave feedback.', 'danger')
+            elif reg['feedback_submitted']:
+                flash('You have already submitted feedback for this event.', 'info')
+            else:
+                cursor.execute('''
+                    UPDATE event_registrations 
+                    SET rating = %s, feedback_text = %s, feedback_submitted = TRUE 
+                    WHERE id = %s
+                ''', (rating, comments, reg['id']))
+                conn.commit()
+                flash('Thank you for your feedback!', 'success')
+    finally:
+        conn.close()
+        
+    return redirect(url_for('events.view', event_id=event_id))
