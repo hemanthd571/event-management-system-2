@@ -115,12 +115,84 @@
 </div>
 {% endif %}
 
-<div class="card">
+{% if current_user.role == 'Student/Organizer' and my_events %}
+<div class="card" style="margin-bottom: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3 style="margin: 0;">{% if current_user.role == 'Student/Organizer' %}My Events{% else %}All Events{% endif %}</h3>
+        <h3 style="margin: 0;">My Event Proposals</h3>
         <a href="{{ url_for('dashboard.export_events') }}" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--secondary-color); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
             <i class="fas fa-file-export"></i> Export CSV
         </a>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                <th style="padding: 1rem 0;">Event ID</th>
+                <th style="padding: 1rem 0;">Title</th>
+                <th style="padding: 1rem 0;">Type</th>
+                <th style="padding: 1rem 0;">Date</th>
+                <th style="padding: 1rem 0;">Status</th>
+                <th style="padding: 1rem 0;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in my_events %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 1rem 0;">{{ event.event_id }}</td>
+                <td style="padding: 1rem 0;"><strong>{{ event.title }}</strong></td>
+                <td style="padding: 1rem 0;">{{ event.event_type }}</td>
+                <td style="padding: 1rem 0;">
+                    {% if event.event_date %}
+                        {{ event.event_date.strftime('%Y-%m-%d') }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td style="padding: 1rem 0;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        {% for app in event.approvals %}
+                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                <span class="badge" style="font-size: 0.65rem; padding: 2px 6px; 
+                                    {% if app.status == 'Approved' %}background: rgba(16, 185, 129, 0.15); color: #047857;
+                                    {% else %}background: rgba(239, 68, 68, 0.15); color: #b91c1c;{% endif %}" title="{{ app.status }}">
+                                    {{ app.required_role }}
+                                </span>
+                                {% if not loop.last %}
+                                    <i class="fas fa-arrow-right" style="color: #cbd5e1; font-size: 0.6rem;"></i>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span class="badge 
+                                {% if event.status == 'Approved' %}badge-success
+                                {% elif event.status == 'Rejected' %}badge-danger
+                                {% else %}badge-warning{% endif %}">
+                                {{ event.status }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td style="padding: 1rem 0; display: flex; gap: 0.5rem; align-items: center;">
+                    <a href="{{ url_for('events.view', event_id=event.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">View</a>
+                    {% if current_user.is_admin() %}
+                    <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to completely delete this event? This action cannot be undone.');">
+                        <button type="submit" class="btn" style="background-color: #ef4444; color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0;">{% if current_user.role == 'Student/Organizer' %}Approved Events (Available to Register){% else %}All Events{% endif %}</h3>
+        {% if current_user.role != 'Student/Organizer' %}
+        <a href="{{ url_for('dashboard.export_events') }}" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--secondary-color); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <i class="fas fa-file-export"></i> Export CSV
+        </a>
+        {% endif %}
     </div>
     {% if all_events %}
     <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">

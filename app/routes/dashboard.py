@@ -68,9 +68,11 @@ def index():
     finally:
         conn.close()
 
-    # If the user is a Student/Organizer, show their own events AND all approved events
+    # For Student/Organizer, separate their own events from all approved events
+    my_events = []
     if current_user.role == 'Student/Organizer':
-        all_events = fetch_events_from_db('SELECT * FROM events WHERE status = %s OR organizer_id = %s ORDER BY created_at DESC', ('Approved', current_user.id))
+        all_events = fetch_events_from_db('SELECT * FROM events WHERE status = %s ORDER BY created_at DESC', ('Approved',))
+        my_events = fetch_events_from_db('SELECT * FROM events WHERE organizer_id = %s ORDER BY created_at DESC', (current_user.id,))
     else:
         all_events = fetch_events_from_db('SELECT * FROM events ORDER BY created_at DESC')
 
@@ -96,6 +98,7 @@ def index():
         'approved_events': approved_events,
         'rejected_events': rejected_events,
         'all_events': all_events,
+        'my_events': my_events,
         'pending_my_approval': pending_my_approval,
         'total_budget': total_budget,
         'chart_labels': chart_labels,
