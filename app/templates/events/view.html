@@ -31,9 +31,7 @@
                 <span class="badge" style="background-color: var(--secondary-color); color: white; margin-left: 0.5rem;">{{ event.event_category }}</span>
             </div>
             <div>
-                {% if event.status == 'Approved' %}
-                <a href="{{ url_for('events.download_pdf', event_id=event.id) }}" class="btn btn-primary"><i class="fas fa-certificate"></i> Download Certificate</a>
-                {% endif %}
+
                 
                 {% if current_user.is_admin() and event.status == 'Approved' %}
                 <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this approved event? This cannot be undone.');">
@@ -131,7 +129,7 @@
                             <p style="font-size: 0.85rem; color: var(--text-secondary);"><em>Only Organizers can scan this code using: {{ url_for('events.scan_ticket', event_id=event.id, qr_token=user_registration.qr_token, _external=True) }}</em></p>
                         {% else %}
                             <p style="color: var(--success);"><i class="fas fa-check-double"></i> You checked in and attended this event.</p>
-                            <a href="{{ url_for('events.download_certificate', event_id=event.id) }}" class="btn btn-primary" style="margin: 0.5rem 0; background-color: var(--info); border: none;"><i class="fas fa-certificate"></i> Download Certificate</a>
+
                             {% if not user_registration.feedback_submitted %}
                                 <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
                                 <h4>Please Leave Feedback</h4>
