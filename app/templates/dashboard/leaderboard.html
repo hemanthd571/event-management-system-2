@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block page_title %}Leaderboard{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="color: var(--primary-color);"><i class="fas fa-trophy" style="color: #ffd700;"></i> Event Participation Leaderboard</h2>
+        <p style="color: var(--text-secondary);">Earn 10 points for every event you check in to!</p>
+    </div>
+
+    {% if leaderboard %}
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for entry in leaderboard %}
+        <div style="
+            display: flex; 
+            align-items: center; 
+            padding: 1rem 1.5rem; 
+            border-radius: 8px; 
+            background: {% if loop.index == 1 %}linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.2)){% elif loop.index == 2 %}linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.2)){% elif loop.index == 3 %}linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.2)){% else %}var(--bg-color){% endif %};
+            border: 1px solid {% if loop.index == 1 %}#ffd700{% elif loop.index == 2 %}#c0c0c0{% elif loop.index == 3 %}#cd7f32{% else %}var(--border-color){% endif %};
+            box-shadow: {% if loop.index <= 3 %}0 4px 6px rgba(0,0,0,0.05){% else %}none{% endif %};
+        ">
+            <div style="font-size: 1.5rem; font-weight: bold; width: 40px; color: {% if loop.index == 1 %}#ffd700{% elif loop.index == 2 %}#c0c0c0{% elif loop.index == 3 %}#cd7f32{% else %}var(--text-secondary){% endif %};">
+                #{{ loop.index }}
+            </div>
+            
+            <div style="flex: 1; display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                    {{ entry.username[0]|upper }}
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 1.1rem; color: var(--text-primary); text-transform: capitalize;">{{ entry.username }}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ entry.role }} {% if entry.department %}• {{ entry.department }}{% endif %}</div>
+                </div>
+            </div>
+            
+            <div style="text-align: right;">
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-color);">{{ entry.points }} <span style="font-size: 1rem; color: var(--text-secondary); font-weight: normal;">pts</span></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: var(--text-secondary); background: var(--bg-color); border-radius: 8px; border: 1px dashed var(--border-color);">
+        <i class="fas fa-ghost" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <h3>No Points Awarded Yet</h3>
+        <p>Attend your first event to start climbing the leaderboard!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -11,6 +11,7 @@ import uuid
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from flask import send_file
+from app.utils.certificate import generate_certificate
 
 
 events_bp = Blueprint('events', __name__, url_prefix='/events')
@@ -503,6 +504,40 @@ def upload_report(event_id):
         
     return redirect(url_for('events.view', event_id=event_id))
 
+@events_bp.route('/<int:event_id>/certificate')
+@login_required
+def download_certificate(event_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            # Check if user attended
+            cursor.execute('''
+                SELECT er.attended, e.title, e.event_date 
+                FROM event_registrations er
+                JOIN events e ON er.event_id = e.id
+                WHERE er.event_id = %s AND er.user_id = %s
+            ''', (event_id, current_user.id))
+            reg = cursor.fetchone()
+            
+            if not reg:
+                flash('You have not registered for this event.', 'danger')
+                return redirect(url_for('events.view', event_id=event_id))
+            
+            if not reg['attended']:
+                flash('You must attend the event to download a certificate.', 'danger')
+                return redirect(url_for('events.view', event_id=event_id))
+            
+            # Generate PDF
+            pdf_bytes = generate_certificate(current_user.username, reg['title'], reg['event_date'])
+            
+            return send_file(
+                io.BytesIO(pdf_bytes),
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=f'certificate_{event_id}.pdf'
+            )
+    finally:
+        conn.close()
 @events_bp.route('/download_pdf/<int:event_id>')
 def download_pdf(event_id):
     event = fetch_event(event_id)

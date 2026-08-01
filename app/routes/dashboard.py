@@ -167,3 +167,24 @@ def export_events():
         mimetype="text/csv",
         headers={"Content-disposition": "attachment; filename=events_export.csv"}
     )
+
+@dashboard_bp.route('/leaderboard')
+@login_required
+def leaderboard():
+    conn = get_db_connection()
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute('''
+                SELECT u.username, u.role, d.code as department, COUNT(er.id) * 10 as points 
+                FROM users u 
+                LEFT JOIN departments d ON u.department_id = d.id 
+                JOIN event_registrations er ON u.id = er.user_id 
+                WHERE er.attended = 1 
+                GROUP BY u.id 
+                ORDER BY points DESC
+            ''')
+            leaderboard_data = cursor.fetchall()
+    finally:
+        conn.close()
+    
+    return render_template('dashboard/leaderboard.html', leaderboard=leaderboard_data)
