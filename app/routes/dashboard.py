@@ -86,11 +86,8 @@ def index():
                     current_app = app
                     break
             
-            if current_app:
-                if current_user.is_admin():
-                    pending_my_approval.append(event)
-                elif current_user.role and current_app.required_role and current_user.role.strip().lower() == current_app.required_role.strip().lower():
-                    pending_my_approval.append(event)
+            if current_app and (current_user.is_admin() or (current_app.required_role and current_user.role and current_app.required_role.strip().lower() in current_user.role.strip().lower())):
+                pending_my_approval.append(event)
         
     context = {
         'total_events': total_events,
