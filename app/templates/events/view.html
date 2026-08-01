@@ -298,6 +298,15 @@
                 </div>
             </form>
         </div>
+        {% else %}
+        {% if current_approval %}
+        <div class="card" style="background-color: var(--bg-color); border: 1px solid var(--warning);">
+            <h3 style="margin-top: 0; color: var(--warning);">Approval Action Hidden</h3>
+            <p style="margin-bottom: 0;">This event is currently waiting for <strong>{{ current_approval.required_role }}</strong> approval.</p>
+            <p style="margin-bottom: 0;">Your current role is <strong>{{ current_user.role or 'None' }}</strong>.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">If you believe you should be able to approve this, please make sure your account has the exact required role assigned.</p>
+        </div>
+        {% endif %}
         {% endif %}
     </div>
 
