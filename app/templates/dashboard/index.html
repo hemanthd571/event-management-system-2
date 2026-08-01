@@ -105,8 +105,16 @@
                         {% endfor %}
                     </div>
                 </td>
-                <td style="padding: 1rem 0;">
-                    <a href="{{ url_for('events.view', event_id=event.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Review & Approve</a>
+                <td style="padding: 1rem 0; display: flex; gap: 0.5rem; align-items: center;">
+                    <a href="{{ url_for('events.view', event_id=event.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">View</a>
+                    <form action="{{ url_for('events.approve', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Quick approve this event?');">
+                        <input type="hidden" name="comments" value="Quick approved from dashboard">
+                        {% if current_user.is_admin() %}
+                            <button type="submit" name="action" value="Admin Approve" class="btn" style="background-color: var(--success); color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer;"><i class="fas fa-check-double"></i> Admin Approve</button>
+                        {% else %}
+                            <button type="submit" name="action" value="Approved" class="btn" style="background-color: var(--success); color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer;"><i class="fas fa-check"></i> Approve</button>
+                        {% endif %}
+                    </form>
                 </td>
             </tr>
             {% endfor %}
