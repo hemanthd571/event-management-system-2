@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, send_from_directory, current_app, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, send_from_directory, current_app, make_response, jsonify
 from flask_login import login_required, current_user
 from app.utils.decorators import role_required
 from app.dal import get_db_connection, get_user_by_id, get_department
@@ -580,6 +580,32 @@ def scan_ticket(event_id, qr_token):
         conn.close()
         
     return render_template('events/scan.html', event=event)
+
+@events_bp.route('/<int:event_id>/live_stats', methods=['GET'])
+@login_required
+def get_event_stats(event_id):
+    event = fetch_event(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+        
+    if current_user.id != event.organizer_id and not current_user.is_admin() and current_user.role not in ['Director', 'VC', 'Pro VC', 'HOD', 'Faculty']:
+        return jsonify({'error': 'Forbidden'}), 403
+        
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT COUNT(*) as total FROM event_registrations WHERE event_id = %s', (event_id,))
+            total = cursor.fetchone()['total']
+            
+            cursor.execute('SELECT COUNT(*) as attended FROM event_registrations WHERE event_id = %s AND attended = TRUE', (event_id,))
+            attended = cursor.fetchone()['attended']
+            
+            return jsonify({
+                'total_registered': total,
+                'total_attended': attended
+            })
+    finally:
+        conn.close()
 
 @events_bp.route('/<int:event_id>/feedback', methods=['POST'])
 @login_required
