@@ -6,7 +6,7 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DB_URI') or \
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DB_URI') or os.environ.get('MYSQL_URL') or \
         'sqlite:///' + os.path.join(basedir, 'college_events.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
