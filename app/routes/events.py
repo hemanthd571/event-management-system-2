@@ -47,11 +47,24 @@ def fetch_event(event_id):
 def send_email_notification(to_email, subject, body):
     from flask_mail import Message
     from app import mail
+    from flask import current_app
+    import threading
+
+    app = current_app._get_current_object()
+
+    def send_async_email(app, msg):
+        with app.app_context():
+            try:
+                mail.send(msg)
+            except Exception as e:
+                print(f"Failed to send email to {to_email}: {e}")
+
     try:
         msg = Message(subject, recipients=[to_email], body=body)
-        mail.send(msg)
+        thread = threading.Thread(target=send_async_email, args=(app, msg))
+        thread.start()
     except Exception as e:
-        print(f"Failed to send email to {to_email}: {e}")
+        print(f"Failed to start email thread for {to_email}: {e}")
 
 def add_notification(user_id, message, link):
     conn = get_db_connection()
