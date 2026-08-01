@@ -89,7 +89,7 @@ def index():
             if current_app:
                 if current_user.is_admin():
                     pending_my_approval.append(event)
-                elif current_user.role == current_app.required_role:
+                elif current_user.role and current_app.required_role and current_user.role.strip().lower() == current_app.required_role.strip().lower():
                     pending_my_approval.append(event)
         
     context = {

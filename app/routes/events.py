@@ -319,7 +319,7 @@ def view(event_id):
     if current_user.role not in ['Student/Organizer']:
         for app in event.approvals:
             if app.status in ['Pending', 'Returned for Correction']:
-                if current_user.is_admin() or app.required_role == current_user.role:
+                if current_user.is_admin() or (app.required_role and current_user.role and app.required_role.strip().lower() == current_user.role.strip().lower()):
                     can_approve = True
                     current_approval = app
                 break
@@ -341,8 +341,8 @@ def approve(event_id):
                 cursor.execute('UPDATE events SET status=%s WHERE id=%s', ('Approved', event_id))
                 cursor.execute("UPDATE approvals SET status='Approved', comments='Admin Override' WHERE event_id=%s AND status='Pending'", (event_id,))
             else:
-                cursor.execute('UPDATE approvals SET status=%s, comments=%s WHERE event_id=%s AND required_role=%s AND status=%s',
-                               (action, comments, event_id, current_user.role, 'Pending'))
+                cursor.execute('UPDATE approvals SET status=%s, comments=%s WHERE event_id=%s AND LOWER(TRIM(required_role))=%s AND status=%s',
+                               (action, comments, event_id, current_user.role.strip().lower(), 'Pending'))
                 
                 if action == 'Approved':
                     # Check if all approvals are done
