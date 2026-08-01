@@ -2,7 +2,46 @@ from app.db_manager import get_db_connection
 from app.models_raw import User, Department, Event, Approval, Notification, EventComment
 from werkzeug.security import check_password_hash, generate_password_hash
 import datetime
+import datetime
 
+
+def get_users_by_role(role, department_id=None):
+    """Fetch users by role, handling both 'role' column and 'roles' table schemas."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            try:
+                # Try the new schema (with roles table)
+                if department_id:
+                    cursor.execute('''
+                        SELECT u.id, u.email 
+                        FROM users u 
+                        JOIN roles r ON u.role_id = r.id 
+                        WHERE r.name = %s AND u.department_id = %s
+                    ''', (role, department_id))
+                else:
+                    cursor.execute('''
+                        SELECT u.id, u.email 
+                        FROM users u 
+                        JOIN roles r ON u.role_id = r.id 
+                        WHERE r.name = %s
+                    ''', (role,))
+                users = cursor.fetchall()
+                if users:
+                    return users
+                # If it didn't throw an error but returned empty, it means the roles table exists 
+                # but no users match. However, just in case the role column is ALSO used, fallback.
+            except Exception:
+                pass
+            
+            # Fallback to old schema (role column in users table)
+            if department_id:
+                cursor.execute('SELECT id, email FROM users WHERE role = %s AND department_id = %s', (role, department_id))
+            else:
+                cursor.execute('SELECT id, email FROM users WHERE role = %s', (role,))
+            return cursor.fetchall()
+    finally:
+        conn.close()
 
 def get_department(dept_id):
     if not dept_id: return None

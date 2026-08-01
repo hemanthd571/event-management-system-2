@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, send_from_directory, current_app, make_response, jsonify
 from flask_login import login_required, current_user
 from app.utils.decorators import role_required
-from app.dal import get_db_connection, get_user_by_id, get_department
+from app.dal import get_db_connection, get_user_by_id, get_department, get_users_by_role
 from app.models_raw import Event, Approval, EventComment
 from datetime import datetime, date
 import os
@@ -226,11 +226,9 @@ def create():
                         if next_app:
                             next_role = next_app['required_role']
                             if next_role in ['Faculty', 'HOD']:
-                                cursor_inner.execute('SELECT id, email FROM users WHERE role=%s AND department_id=%s', (next_role, department_id))
+                                next_users = get_users_by_role(next_role, department_id)
                             else:
-                                cursor_inner.execute('SELECT id, email FROM users WHERE role=%s', (next_role,))
-                            
-                            next_users = cursor_inner.fetchall()
+                                next_users = get_users_by_role(next_role)
                             for u in next_users:
                                 if u['email']:
                                     send_email_notification(
@@ -392,11 +390,9 @@ def approve(event_id):
                             if next_app:
                                 next_role = next_app['required_role']
                                 if next_role in ['Faculty', 'HOD']:
-                                    cursor.execute('SELECT id, email FROM users WHERE role=%s AND department_id=%s', (next_role, event.department_id))
+                                    next_users = get_users_by_role(next_role, event.department_id)
                                 else:
-                                    cursor.execute('SELECT id, email FROM users WHERE role=%s', (next_role,))
-                                
-                                next_users = cursor.fetchall()
+                                    next_users = get_users_by_role(next_role)
                                 for u in next_users:
                                     if u['email']:
                                         send_email_notification(
