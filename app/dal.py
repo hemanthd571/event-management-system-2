@@ -20,12 +20,19 @@ def get_user_by_id(user_id):
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('''
-                SELECT *
-                FROM users 
-                WHERE id = %s
-            ''', (user_id,))
-            row = cursor.fetchone()
+            try:
+                cursor.execute('''
+                    SELECT u.*, r.name as role 
+                    FROM users u 
+                    LEFT JOIN roles r ON u.role_id = r.id 
+                    WHERE u.id = %s
+                ''', (user_id,))
+                row = cursor.fetchone()
+            except Exception:
+                # Fallback if roles table or role_id column doesn't exist
+                cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+                row = cursor.fetchone()
+
             if not row: return None
             
             user = User(**row)
