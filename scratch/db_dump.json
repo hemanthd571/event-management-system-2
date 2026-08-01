@@ -1,0 +1,132 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "role": "Admin",
+      "email": "hemanthd571+admin@gmail.com",
+      "password_hash": "scrypt:32768:8:1$YlcRYfHQvlTkh4RP$ab4f884b72e79806aef48f7c690f22921d4a8a8a8d66fb345312ef5bc3b55bf0a41daa4ca39580fba8ae958a1cfa0edb8affa655b93d031d9bfa3dbe62559adf",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:15:45",
+      "department_id": null
+    },
+    {
+      "id": 2,
+      "username": "hemanth",
+      "role": "Admin",
+      "email": "hemanthd571+hemanth@gmail.com",
+      "password_hash": "scrypt:32768:8:1$VRaKqB8FLLHTMuPE$714b6665826979299847fa0ae934c5561b8d40ecb5022cd734360833de159b40ab3215e99e085a54e7e2173714790e20d255fc946efdabf742f90f09f22172bc",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:26:53",
+      "department_id": null
+    },
+    {
+      "id": 3,
+      "username": "sharath",
+      "role": "Faculty",
+      "email": "hemanthd571+sharath@gmail.com",
+      "password_hash": "scrypt:32768:8:1$avldse9xNn9cIWrg$d415871269294b1622ad6e1f0c52644963912547b16cee572a386448aee6ffbe0d739a5cae341d57c50122cf9d87c53a17c2b572955b118106240530b3be3720",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:27:46",
+      "department_id": null
+    },
+    {
+      "id": 4,
+      "username": "student",
+      "role": "Student/Organizer",
+      "email": "hemanthd571+student@gmail.com",
+      "password_hash": "scrypt:32768:8:1$tsRgLQOgZh67FlDO$0a9706d00497d6bed206a190a32aba8e72ec8edaf997abfb37ebd467f06e7f01c9f8a1dea7541396b0eb360a4967b4b8068acdf867a63ecd0bea9da785e405ed",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:30:31",
+      "department_id": 1
+    },
+    {
+      "id": 5,
+      "username": "faculty",
+      "role": "Faculty",
+      "email": "hemanthd571+faculty@gmail.com",
+      "password_hash": "scrypt:32768:8:1$wJ4Xy5A7dmFiXZHZ$73a32a7ee2396344e60210df99865f65db345389481a11c8150c5503a521de3b679c5530b650272e5ab4cda179dbe38a728042b2b57add5aed4dac8e14335685",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:30:31",
+      "department_id": 1
+    },
+    {
+      "id": 6,
+      "username": "hod",
+      "role": "HOD",
+      "email": "hemanthd571+hod@gmail.com",
+      "password_hash": "scrypt:32768:8:1$SGFFagyvk6Q8BmQl$6c21126be32ce8a299a21e6af565d8fe72e7a1af6b0369f55eb603c281e773f7154c218db48b1c194dd48ebec4679c09d997d0a01a6e8c37cf705809278a62bc",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:30:31",
+      "department_id": 1
+    },
+    {
+      "id": 7,
+      "username": "director",
+      "role": "Director",
+      "email": "hemanthd571+director@gmail.com",
+      "password_hash": "scrypt:32768:8:1$jFVTX28Rc7RV8NYe$11054e499c3b64be070e6d89e3baaa6c7a2357241e872bd2547df5608da140d1dd3fcfdd27ac6381e7e881de2d3a0fed5e06a748481056595ce731e9ebfce39d",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:30:31",
+      "department_id": 1
+    },
+    {
+      "id": 8,
+      "username": "provc",
+      "role": "Pro VC",
+      "email": "hemanthd571+provc@gmail.com",
+      "password_hash": "scrypt:32768:8:1$A4lfQuNEtcdplb9J$62c0452e841b06ab94d02c52cfda392298cb0a04d78a752d53625c6ff38a4fc375e8be7c35045ca320894820b6ea83b859a9caff62e9fe3b8d48573d086c7bfb",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:30:31",
+      "department_id": 1
+    },
+    {
+      "id": 9,
+      "username": "vc",
+      "role": "VC",
+      "email": "hemanthd571+vc@gmail.com",
+      "password_hash": "scrypt:32768:8:1$FiXiSzrbkWtzxLt7$c1d659bcc2dd234648d6a7cde9ac61f171c5be00ad6b1d260d2ab1db39d2d66a19b255e315b969ade3d3e20610400aeb8bd30f122e7a146789abeac12d9492cb",
+      "is_active": 1,
+      "created_at": "2026-07-27T14:30:31",
+      "department_id": 1
+    },
+    {
+      "id": 11,
+      "username": "student10",
+      "role": "Student/Organizer",
+      "email": "ladwarohit9@gmail.com",
+      "password_hash": "scrypt:32768:8:1$Wr2x1rhbOe6ieSN9$c04ea8fd6df83b73b0e8465247e84587f876778909f1401f41e731ecd279d5e4a1c1be3f35ff0705e93f4fd66293373a0c97a210b2f9e2e5af58bdd85e8b85e3",
+      "is_active": 1,
+      "created_at": "2026-07-31T04:43:18",
+      "department_id": 1
+    }
+  ],
+  "events": [
+    {
+      "id": 38,
+      "event_id": "EVT-2026-001",
+      "title": "ai workshop",
+      "event_type": "Department Level",
+      "organizer_name": "student10",
+      "faculty_coordinator": "kp sir",
+      "contact_number": null,
+      "email": null,
+      "event_date": "2026-11-03",
+      "event_time": null,
+      "venue": "Main Auditorium",
+      "budget": 2000.0,
+      "funding_source": "hod",
+      "expected_participants": 123,
+      "chief_guest": "asha mam",
+      "objectives": "ok",
+      "description": "ok",
+      "schedule": null,
+      "required_resources": null,
+      "proposal_pdf_path": null,
+      "budget_pdf_path": null,
+      "supporting_docs_path": null,
+      "status": "Approved",
+      "created_at": null,
+      "department_id": 1,
+      "organizer_id": 11,
+      "start_time": 

@@ -315,10 +315,10 @@ def view(event_id):
 
     can_approve = False
     current_approval = None
-    if current_user.role not in ['Student/Organizer', 'Admin']:
+    if current_user.role not in ['Student/Organizer']:
         for app in event.approvals:
             if app.status in ['Pending', 'Returned for Correction']:
-                if app.required_role == current_user.role:
+                if current_user.is_admin() or app.required_role == current_user.role:
                     can_approve = True
                     current_approval = app
                 break
@@ -336,17 +336,21 @@ def approve(event_id):
         with conn.cursor() as cursor:
             action = request.form.get('action')
             comments = request.form.get('comments')
-            cursor.execute('UPDATE approvals SET status=%s, comments=%s WHERE event_id=%s AND required_role=%s AND status=%s',
-                           (action, comments, event_id, current_user.role, 'Pending'))
-            
-            if action == 'Approved':
-                # Check if all approvals are done
-                cursor.execute('SELECT COUNT(*) as c FROM approvals WHERE event_id=%s AND status!=%s', (event_id, 'Approved'))
-                remaining = cursor.fetchone()['c']
-                if remaining == 0:
-                    cursor.execute('UPDATE events SET status=%s WHERE id=%s', ('Approved', event_id))
-            elif action == 'Rejected':
-                cursor.execute('UPDATE events SET status=%s WHERE id=%s', ('Rejected', event_id))
+            if action == 'Admin Approve' and current_user.is_admin():
+                cursor.execute('UPDATE events SET status=%s WHERE id=%s', ('Approved', event_id))
+                cursor.execute("UPDATE approvals SET status='Approved', comments='Admin Override' WHERE event_id=%s AND status='Pending'", (event_id,))
+            else:
+                cursor.execute('UPDATE approvals SET status=%s, comments=%s WHERE event_id=%s AND required_role=%s AND status=%s',
+                               (action, comments, event_id, current_user.role, 'Pending'))
+                
+                if action == 'Approved':
+                    # Check if all approvals are done
+                    cursor.execute('SELECT COUNT(*) as c FROM approvals WHERE event_id=%s AND status!=%s', (event_id, 'Approved'))
+                    remaining = cursor.fetchone()['c']
+                    if remaining == 0:
+                        cursor.execute('UPDATE events SET status=%s WHERE id=%s', ('Approved', event_id))
+                elif action == 'Rejected':
+                    cursor.execute('UPDATE events SET status=%s WHERE id=%s', ('Rejected', event_id))
                 
             conn.commit()
     finally:
