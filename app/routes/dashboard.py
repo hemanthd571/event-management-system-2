@@ -82,7 +82,7 @@ def index():
         for event in candidate_events:
             current_app = None
             for app in event.approvals:
-                if app.status in ['Pending', 'Returned for Correction']:
+                if app.status and app.status.strip().title() in ['Pending', 'Returned For Correction']:
                     current_app = app
                     break
             

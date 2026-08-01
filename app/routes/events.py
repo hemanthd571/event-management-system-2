@@ -318,7 +318,7 @@ def view(event_id):
     current_approval = None
     if current_user.role not in ['Student/Organizer']:
         for app in event.approvals:
-            if app.status in ['Pending', 'Returned for Correction']:
+            if app.status and app.status.strip().title() in ['Pending', 'Returned For Correction']:
                 if current_user.is_admin() or (app.required_role and current_user.role and app.required_role.strip().lower() == current_user.role.strip().lower()):
                     can_approve = True
                     current_approval = app
