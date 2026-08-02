@@ -146,10 +146,10 @@ def check_waitlist_expiries(app):
                                       JOIN users u ON vw.user_id = u.id
                                       JOIN venues v ON vw.venue_id = v.id
                                       WHERE vw.venue_id = %s AND vw.event_date = %s AND vw.status = 'waiting'
-                                      AND (vw.start_time IS NULL OR vw.end_time IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
+                                      AND (vw.start_time IS NULL OR vw.end_time IS NULL OR %s IS NULL OR %s IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
                                       ORDER BY vw.created_at ASC
                                       LIMIT 1
-                                   ''', (res['venue_id'], res['event_date'], res['end_time'], res['start_time']))
+                                   ''', (res['venue_id'], res['event_date'], res['start_time'], res['end_time'], res['end_time'], res['start_time']))
                     next_user = cursor.fetchone()
                     
                     if next_user:

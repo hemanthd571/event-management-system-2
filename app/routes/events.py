@@ -787,10 +787,10 @@ def decline_waitlist(waitlist_id):
                               JOIN users u ON vw.user_id = u.id
                               JOIN venues v ON vw.venue_id = v.id
                               WHERE vw.venue_id = %s AND vw.event_date = %s AND vw.status = 'waiting'
-                              AND (vw.start_time IS NULL OR vw.end_time IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
+                              AND (vw.start_time IS NULL OR vw.end_time IS NULL OR %s IS NULL OR %s IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
                               ORDER BY vw.created_at ASC
                               LIMIT 1
-                           ''', (entry['venue_id'], entry['event_date'], entry['end_time'], entry['start_time']))
+                           ''', (entry['venue_id'], entry['event_date'], entry['start_time'], entry['end_time'], entry['end_time'], entry['start_time']))
             next_user = cursor.fetchone()
             
             if next_user:
@@ -860,10 +860,10 @@ def cancel_event(event_id):
                               JOIN users u ON vw.user_id = u.id
                               JOIN venues v ON vw.venue_id = v.id
                               WHERE vw.venue_id = %s AND vw.event_date = %s AND vw.status = 'waiting'
-                              AND (vw.start_time IS NULL OR vw.end_time IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
+                              AND (vw.start_time IS NULL OR vw.end_time IS NULL OR %s IS NULL OR %s IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
                               ORDER BY vw.created_at ASC
                               LIMIT 1
-                           ''', (event['venue_id'], event_date, event['end_time'], event['start_time']))
+                           ''', (event['venue_id'], event_date, event['start_time'], event['end_time'], event['end_time'], event['start_time']))
             first_user = cursor.fetchone()
             
             if first_user:
