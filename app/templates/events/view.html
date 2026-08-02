@@ -182,7 +182,7 @@
                                         </div>
                                     </div>
                                 {% else %}
-                                    <a href="{{ url_for('events.download_uploaded_file', filename=file) }}" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;" download="{{ file }}">
+                                    <a href="{{ url_for('events.download_uploaded_file', filename=file) }}" target="_blank" class="btn btn-primary" style="background-color: var(--info); border: none; align-self: center;" download="{{ file }}">
                                         <i class="fas fa-file-download"></i> View Proof
                                     </a>
                                 {% endif %}
@@ -208,7 +208,7 @@
                                         </div>
                                     </div>
                                 {% else %}
-                                    <a href="{{ url_for('events.download_uploaded_file', filename=bill_file) }}" class="btn btn-primary" download="{{ bill_file }}" style="background-color: var(--info); border: none; align-self: center;">
+                                    <a href="{{ url_for('events.download_uploaded_file', filename=bill_file) }}" target="_blank" class="btn btn-primary" download="{{ bill_file }}" style="background-color: var(--info); border: none; align-self: center;">
                                         <i class="fas fa-file-pdf"></i> Detailed Budget Bill
                                     </a>
                                 {% endif %}
