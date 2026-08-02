@@ -39,12 +39,20 @@ def create_app(config_class=Config):
                         user_id INT NOT NULL,
                         venue_id INT NOT NULL,
                         event_date DATE NOT NULL,
+                        start_time TIME NULL,
+                        end_time TIME NULL,
                         status VARCHAR(50) DEFAULT 'waiting',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                         FOREIGN KEY (venue_id) REFERENCES venues(id) ON DELETE CASCADE
                     )
                 ''')
+                # Try to add columns if they don't exist (for existing tables)
+                try:
+                    cursor.execute('ALTER TABLE venue_waitlist ADD COLUMN start_time TIME NULL, ADD COLUMN end_time TIME NULL')
+                except Exception:
+                    pass # Columns likely already exist
+                    
                 conn.commit()
             conn.close()
         except Exception as e:

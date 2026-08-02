@@ -167,7 +167,7 @@ def create():
                         departments_list = [Department(**d) for d in cursor2.fetchall()]
                         cursor2.execute('SELECT * FROM venues')
                         venues_list = cursor2.fetchall()
-                    return render_template('events/create.html', departments=departments_list, venues=venues_list, clash_info={'venue_id': venue_id, 'event_date': event_date})
+                    return render_template('events/create.html', departments=departments_list, venues=venues_list, clash_info={'venue_id': venue_id, 'event_date': event_date, 'start_time': start_time, 'end_time': end_time})
 
                 cursor.execute('SELECT MAX(id) as max_id FROM events')
                 max_id_row = cursor.fetchone()
@@ -702,6 +702,8 @@ def submit_feedback(event_id):
 def join_waitlist():
     venue_id = request.form.get('venue_id')
     event_date = request.form.get('event_date')
+    start_time = request.form.get('start_time')
+    end_time = request.form.get('end_time')
     if not venue_id or not event_date:
         flash("Invalid waitlist request.", "danger")
         return redirect(url_for('events.create'))
@@ -715,8 +717,8 @@ def join_waitlist():
             if cursor.fetchone():
                 flash("You are already on the waitlist for this venue on this date.", "info")
             else:
-                cursor.execute('INSERT INTO venue_waitlist (user_id, venue_id, event_date) VALUES (%s, %s, %s)',
-                               (current_user.id, venue_id, event_date))
+                cursor.execute('INSERT INTO venue_waitlist (user_id, venue_id, event_date, start_time, end_time) VALUES (%s, %s, %s, %s, %s)',
+                               (current_user.id, venue_id, event_date, start_time, end_time))
                 conn.commit()
                 flash("Successfully joined the waitlist! We will notify you if this slot becomes available.", "success")
     except Exception as e:
@@ -766,7 +768,8 @@ def cancel_event(event_id):
                               JOIN users u ON vw.user_id = u.id
                               JOIN venues v ON vw.venue_id = v.id
                               WHERE vw.venue_id = %s AND vw.event_date = %s AND vw.status = 'waiting'
-                           ''', (event['venue_id'], event_date))
+                              AND (vw.start_time IS NULL OR vw.end_time IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
+                           ''', (event['venue_id'], event_date, event['end_time'], event['start_time']))
             waitlist_users = cursor.fetchall()
             
             for user in waitlist_users:

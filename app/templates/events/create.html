@@ -10,6 +10,8 @@
         <form method="POST" action="{{ url_for('events.join_waitlist') }}" style="margin-top: 10px;">
             <input type="hidden" name="venue_id" value="{{ clash_info.venue_id }}">
             <input type="hidden" name="event_date" value="{{ clash_info.event_date }}">
+            <input type="hidden" name="start_time" value="{{ clash_info.start_time }}">
+            <input type="hidden" name="end_time" value="{{ clash_info.end_time }}">
             <button type="submit" class="btn btn-warning">Join Waitlist for this Venue & Date</button>
         </form>
     </div>
