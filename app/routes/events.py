@@ -770,12 +770,15 @@ def decline_waitlist(waitlist_id):
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            # Verify ownership and status
-            cursor.execute('SELECT * FROM venue_waitlist WHERE id = %s AND user_id = %s AND status = %s', (waitlist_id, current_user.id, 'reserved'))
+            cursor.execute('SELECT * FROM venue_waitlist WHERE id = %s AND status = %s', (waitlist_id, 'reserved'))
             entry = cursor.fetchone()
             
             if not entry:
                 flash("Invalid or expired waitlist reservation.", "danger")
+                return redirect(url_for('dashboard.index'))
+                
+            if entry['user_id'] != current_user.id:
+                flash("You are logged in as a different user! Please log out and log in as the correct user to decline this slot.", "danger")
                 return redirect(url_for('dashboard.index'))
                 
             # Mark as expired
