@@ -93,13 +93,7 @@
                 
                 {% if current_user.id|int == event.organizer_id|int or current_user.is_admin() or current_user.role in ['Director', 'VC', 'Pro VC', 'HOD', 'Faculty'] %}
                     <p style="color: var(--info);"><i class="fas fa-info-circle"></i> As an official ({{ current_user.role }}), registration is not required for you.</p>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Use your mobile device to scan attendee QR codes at the door, or use your laptop's camera below.</p>
-                    
-                    <button type="button" id="start-scanner-btn" class="btn btn-primary" style="margin-bottom: 1rem;"><i class="fas fa-camera"></i> Open Laptop Scanner</button>
-                    <div id="reader-container" style="display: none; max-width: 400px; border: 2px solid var(--primary-color); border-radius: 8px; overflow: hidden; padding: 10px; background: white; margin-bottom: 1rem;">
-                        <div id="reader"></div>
-                        <button type="button" id="stop-scanner-btn" class="btn btn-danger" style="margin-top: 10px; width: 100%;"><i class="fas fa-stop"></i> Stop Scanner</button>
-                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Use your mobile device to scan attendee QR codes at the door.</p>
 
                     <div id="live-checkin-dashboard" style="background-color: var(--bg-color); padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border: 1px solid var(--border-color);">
                         <h4 style="margin-top: 0; display: flex; align-items: center;"><i class="fas fa-chart-line" style="color: var(--primary-color); margin-right: 8px;"></i> Live Check-in Status <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background-color: var(--danger); color: white; margin-left: 10px; animation: pulse 2s infinite;">LIVE</span></h4>
@@ -377,61 +371,6 @@
     {% endif %}
 </script>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-    {% if current_user.id|int == event.organizer_id|int or current_user.is_admin() or current_user.role in ['Director', 'VC', 'Pro VC', 'HOD', 'Faculty'] %}
-    document.addEventListener("DOMContentLoaded", function() {
-        const startBtn = document.getElementById('start-scanner-btn');
-        const stopBtn = document.getElementById('stop-scanner-btn');
-        const readerContainer = document.getElementById('reader-container');
-        let html5QrcodeScanner = null;
 
-        if (startBtn && stopBtn) {
-            startBtn.addEventListener('click', () => {
-                readerContainer.style.display = 'block';
-                startBtn.style.display = 'none';
-
-                html5QrcodeScanner = new Html5Qrcode("reader");
-                html5QrcodeScanner.start(
-                    { facingMode: "environment" }, 
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 }
-                    },
-                    (decodedText, decodedResult) => {
-                        // When a QR code is successfully scanned
-                        console.log(`Scan result: ${decodedText}`);
-                        // The decodedText is the URL containing the qr_token
-                        // We will redirect the organizer's browser to this URL to complete check-in
-                        html5QrcodeScanner.stop().then(() => {
-                            readerContainer.innerHTML = "<div class='alert alert-success'>Scan successful! Checking in...</div>";
-                            window.location.href = decodedText;
-                        }).catch(err => {
-                            console.error("Failed to stop scanner", err);
-                        });
-                    },
-                    (errorMessage) => {
-                        // ignore background errors
-                    }
-                ).catch((err) => {
-                    console.error("Error starting scanner", err);
-                    alert("Could not start camera. Please ensure you have granted camera permissions.");
-                });
-            });
-
-            stopBtn.addEventListener('click', () => {
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.stop().then(() => {
-                        readerContainer.style.display = 'none';
-                        startBtn.style.display = 'inline-block';
-                    }).catch(err => {
-                        console.error("Failed to stop scanner", err);
-                    });
-                }
-            });
-        }
-    });
-    {% endif %}
-</script>
 
 {% endblock %}
