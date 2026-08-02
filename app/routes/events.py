@@ -99,6 +99,16 @@ def create():
                 if missing_events:
                     flash(f"You cannot create a new event. You have a past event ('{missing_events[0]['title']}') with missing completion proofs (report or bill).", "danger")
                     return redirect(url_for('dashboard.index'))
+                    
+                # Check cancellation limit
+                cursor.execute('''SELECT COUNT(*) as cancel_count FROM events 
+                                  WHERE organizer_id = %s AND status = 'Cancelled' 
+                                  AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)''', 
+                               (current_user.id,))
+                cancel_data = cursor.fetchone()
+                if cancel_data and cancel_data['cancel_count'] >= 3:
+                    flash(f"You cannot create a new event. You have reached the maximum allowed limit of 3 cancellations within the last 30 days.", "danger")
+                    return redirect(url_for('dashboard.index'))
 
         if request.method == 'POST':
             # Simplified for brevity - parse form, insert into DB, add approvals
