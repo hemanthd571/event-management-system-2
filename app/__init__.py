@@ -27,6 +27,28 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp)
     
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    with app.app_context():
+        from app.dal import get_db_connection
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS venue_waitlist (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        user_id INT NOT NULL,
+                        venue_id INT NOT NULL,
+                        event_date DATE NOT NULL,
+                        status VARCHAR(50) DEFAULT 'waiting',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                        FOREIGN KEY (venue_id) REFERENCES venues(id) ON DELETE CASCADE
+                    )
+                ''')
+                conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Failed to create venue_waitlist table: {e}")
 
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         from apscheduler.schedulers.background import BackgroundScheduler
