@@ -763,6 +763,62 @@ def join_waitlist():
         conn.close()
         
     return redirect(url_for('dashboard.index'))
+    
+@events_bp.route('/waitlist/decline/<int:waitlist_id>')
+@login_required
+def decline_waitlist(waitlist_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Verify ownership and status
+            cursor.execute('SELECT * FROM venue_waitlist WHERE id = %s AND user_id = %s AND status = %s', (waitlist_id, current_user.id, 'reserved'))
+            entry = cursor.fetchone()
+            
+            if not entry:
+                flash("Invalid or expired waitlist reservation.", "danger")
+                return redirect(url_for('dashboard.index'))
+                
+            # Mark as expired
+            cursor.execute("UPDATE venue_waitlist SET status = 'expired' WHERE id = %s", (waitlist_id,))
+            
+            # Find next person
+            cursor.execute('''SELECT vw.id, u.email, u.username, v.name as venue_name, vw.start_time, vw.end_time
+                              FROM venue_waitlist vw
+                              JOIN users u ON vw.user_id = u.id
+                              JOIN venues v ON vw.venue_id = v.id
+                              WHERE vw.venue_id = %s AND vw.event_date = %s AND vw.status = 'waiting'
+                              AND (vw.start_time IS NULL OR vw.end_time IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
+                              ORDER BY vw.created_at ASC
+                              LIMIT 1
+                           ''', (entry['venue_id'], entry['event_date'], entry['end_time'], entry['start_time']))
+            next_user = cursor.fetchone()
+            
+            if next_user:
+                cursor.execute("UPDATE venue_waitlist SET status = 'reserved', reserved_until = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE id = %s", (next_user['id'],))
+                start_str = (str(next_user['start_time'])[:5] if next_user['start_time'] else "")
+                end_str = (str(next_user['end_time'])[:5] if next_user['end_time'] else "")
+                
+                claim_link = url_for('events.create', venue_id=entry['venue_id'], event_date=entry['event_date'], start_time=start_str, end_time=end_str, _external=True)
+                decline_link = url_for('events.decline_waitlist', waitlist_id=next_user['id'], _external=True)
+                
+                send_email_notification(
+                    next_user['email'],
+                    "Venue Slot Reserved For You! (24 Hours)",
+                    f"Dear {next_user['username']},\n\nGood news! The venue '{next_user['venue_name']}' is now available on {entry['event_date']}. "
+                    "Since the previous person declined it, we have locked this slot exclusively for you for the next 24 hours!\n\n"
+                    f"Click here to instantly claim the slot with your pre-filled details:\n{claim_link}\n\n"
+                    f"If you DO NOT want this slot, click here to decline it instantly so the next person can have it:\n{decline_link}\n\n"
+                    "Note: If you do not submit your proposal within 24 hours, the reservation will expire automatically."
+                )
+            
+            conn.commit()
+            flash("You have successfully declined the slot. It has been passed to the next person.", "success")
+    except Exception as e:
+        flash(f"Error declining slot: {e}", "danger")
+    finally:
+        conn.close()
+        
+    return redirect(url_for('dashboard.index'))
 
 
 @events_bp.route('/cancel/<int:event_id>', methods=['POST'])
@@ -818,6 +874,7 @@ def cancel_event(event_id):
                 end_str = (str(first_user['end_time'])[:5] if first_user['end_time'] else "")
                 
                 claim_link = url_for('events.create', venue_id=event['venue_id'], event_date=event_date, start_time=start_str, end_time=end_str, _external=True)
+                decline_link = url_for('events.decline_waitlist', waitlist_id=first_user['id'], _external=True)
                 
                 send_email_notification(
                     first_user['email'],
@@ -825,6 +882,7 @@ def cancel_event(event_id):
                     f"Dear {first_user['username']},\n\nGood news! The venue '{first_user['venue_name']}' is now available on {event_date}. "
                     "Since you were first on the waitlist, we have locked this slot exclusively for you for the next 24 hours!\n\n"
                     f"Click here to instantly claim the slot with your pre-filled details:\n{claim_link}\n\n"
+                    f"If you DO NOT want this slot, click here to decline it instantly so the next person can have it:\n{decline_link}\n\n"
                     "Note: If you do not submit your proposal within 24 hours, the reservation will expire and the slot will be passed to the next person."
                 )
                 
