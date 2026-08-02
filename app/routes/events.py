@@ -133,6 +133,22 @@ def create():
                 if uni_clash:
                     flash(f"Failed to submit: An approved University Level event ('{uni_clash['title']}') is scheduled on this date. No other events are allowed.", 'danger')
                     return redirect(url_for('events.create'))
+                    
+                # 1.5 Check for active waitlist reservations belonging to someone else
+                cursor.execute('''
+                    SELECT u.username FROM venue_waitlist vw
+                    JOIN users u ON vw.user_id = u.id
+                    WHERE vw.venue_id = %s 
+                    AND vw.event_date = %s 
+                    AND vw.status = 'reserved'
+                    AND vw.reserved_until > NOW()
+                    AND vw.user_id != %s
+                    AND (vw.start_time IS NULL OR vw.end_time IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
+                ''', (venue_id, event_date, current_user.id, end_time, start_time))
+                reservation_clash = cursor.fetchone()
+                if reservation_clash:
+                    flash(f"Failed to submit: This venue slot is currently reserved for '{reservation_clash['username']}' for the next 24 hours.", 'danger')
+                    return redirect(url_for('events.create'))
 
                 # 2. Venue clash check with 1-hour gap for Department Level
                 if event_type == 'Department Level':
@@ -193,6 +209,16 @@ def create():
                                ))
                 
                 new_event_id = cursor.lastrowid
+                
+                # Consume active reservation if any
+                cursor.execute('''
+                    UPDATE venue_waitlist 
+                    SET status = 'claimed'
+                    WHERE venue_id = %s 
+                    AND event_date = %s 
+                    AND user_id = %s
+                    AND status = 'reserved'
+                ''', (venue_id, event_date, current_user.id))
                 
                 # Add default approvals
                 if event_type == 'Department Level':
@@ -762,36 +788,37 @@ def cancel_event(event_id):
             conn.commit()
             flash("Event cancelled successfully.", "success")
             
-            # Trigger Waitlist Notifications
+            # Trigger Waitlist Notifications (Timed Lock)
             cursor.execute('''SELECT vw.id, u.email, u.username, v.name as venue_name, vw.start_time, vw.end_time
                               FROM venue_waitlist vw
                               JOIN users u ON vw.user_id = u.id
                               JOIN venues v ON vw.venue_id = v.id
                               WHERE vw.venue_id = %s AND vw.event_date = %s AND vw.status = 'waiting'
                               AND (vw.start_time IS NULL OR vw.end_time IS NULL OR (vw.start_time < %s AND vw.end_time > %s))
+                              ORDER BY vw.created_at ASC
+                              LIMIT 1
                            ''', (event['venue_id'], event_date, event['end_time'], event['start_time']))
-            waitlist_users = cursor.fetchall()
+            first_user = cursor.fetchone()
             
-            for user in waitlist_users:
-                # Generate a quick link that pre-fills the form
-                # Note: start_time and end_time are timedelta objects from MySQL, we format them to HH:MM if they exist
-                start_str = (str(user['start_time'])[:5] if user['start_time'] else "")
-                end_str = (str(user['end_time'])[:5] if user['end_time'] else "")
+            if first_user:
+                # Update status to reserved and set 24hr expiry
+                cursor.execute("UPDATE venue_waitlist SET status = 'reserved', reserved_until = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE id = %s", (first_user['id'],))
+                
+                start_str = (str(first_user['start_time'])[:5] if first_user['start_time'] else "")
+                end_str = (str(first_user['end_time'])[:5] if first_user['end_time'] else "")
                 
                 claim_link = url_for('events.create', venue_id=event['venue_id'], event_date=event_date, start_time=start_str, end_time=end_str, _external=True)
                 
                 send_email_notification(
-                    user['email'],
-                    "Venue Slot Available!",
-                    f"Dear {user['username']},\n\nGood news! The venue '{user['venue_name']}' is now available on {event_date}. "
-                    "Since you are on the waitlist, you can now submit your event proposal for this date and venue.\n\n"
+                    first_user['email'],
+                    "Venue Slot Reserved For You! (24 Hours)",
+                    f"Dear {first_user['username']},\n\nGood news! The venue '{first_user['venue_name']}' is now available on {event_date}. "
+                    "Since you were first on the waitlist, we have locked this slot exclusively for you for the next 24 hours!\n\n"
                     f"Click here to instantly claim the slot with your pre-filled details:\n{claim_link}\n\n"
-                    "Note: This is a first-come, first-served notification. Please submit your proposal quickly."
+                    "Note: If you do not submit your proposal within 24 hours, the reservation will expire and the slot will be passed to the next person."
                 )
-                cursor.execute('UPDATE venue_waitlist SET status = %s WHERE id = %s', ('notified', user['id']))
-            
-            if waitlist_users:
-                conn.commit()
+                
+            conn.commit()
                 
     except Exception as e:
         flash(f"Error cancelling event: {e}", "danger")
