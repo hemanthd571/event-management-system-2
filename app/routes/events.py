@@ -763,7 +763,7 @@ def cancel_event(event_id):
             flash("Event cancelled successfully.", "success")
             
             # Trigger Waitlist Notifications
-            cursor.execute('''SELECT vw.id, u.email, u.username, v.name as venue_name
+            cursor.execute('''SELECT vw.id, u.email, u.username, v.name as venue_name, vw.start_time, vw.end_time
                               FROM venue_waitlist vw
                               JOIN users u ON vw.user_id = u.id
                               JOIN venues v ON vw.venue_id = v.id
@@ -773,11 +773,19 @@ def cancel_event(event_id):
             waitlist_users = cursor.fetchall()
             
             for user in waitlist_users:
+                # Generate a quick link that pre-fills the form
+                # Note: start_time and end_time are timedelta objects from MySQL, we format them to HH:MM if they exist
+                start_str = (str(user['start_time'])[:5] if user['start_time'] else "")
+                end_str = (str(user['end_time'])[:5] if user['end_time'] else "")
+                
+                claim_link = url_for('events.create', venue_id=event['venue_id'], event_date=event_date, start_time=start_str, end_time=end_str, _external=True)
+                
                 send_email_notification(
                     user['email'],
                     "Venue Slot Available!",
                     f"Dear {user['username']},\n\nGood news! The venue '{user['venue_name']}' is now available on {event_date}. "
                     "Since you are on the waitlist, you can now submit your event proposal for this date and venue.\n\n"
+                    f"Click here to instantly claim the slot with your pre-filled details:\n{claim_link}\n\n"
                     "Note: This is a first-come, first-served notification. Please submit your proposal quickly."
                 )
                 cursor.execute('UPDATE venue_waitlist SET status = %s WHERE id = %s', ('notified', user['id']))
