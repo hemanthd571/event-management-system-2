@@ -47,13 +47,16 @@ def create_app(config_class=Config):
                         FOREIGN KEY (venue_id) REFERENCES venues(id) ON DELETE CASCADE
                     )
                 ''')
-                # Try to add columns if they don't exist (for existing tables)
+                conn.commit()
+            
+            # Separate transaction for alter table to prevent transaction abort on error
+            with conn.cursor() as cursor:
                 try:
                     cursor.execute('ALTER TABLE venue_waitlist ADD COLUMN start_time TIME NULL, ADD COLUMN end_time TIME NULL')
+                    conn.commit()
                 except Exception:
-                    pass # Columns likely already exist
+                    conn.rollback() # Columns likely already exist
                     
-                conn.commit()
             conn.close()
         except Exception as e:
             print(f"Failed to create venue_waitlist table: {e}")
