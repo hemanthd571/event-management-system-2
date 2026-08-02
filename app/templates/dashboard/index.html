@@ -255,7 +255,7 @@
                 <td style="padding: 1rem 0; display: flex; gap: 0.5rem; align-items: center;">
                     <a href="{{ url_for('events.view', event_id=event.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">View</a>
                     
-                    {% if event.status != 'Cancelled' and event.event_date and (event.event_date - today).days >= 7 %}
+                    {% if (current_user.id == event.organizer_id or current_user.is_admin()) and event.status != 'Cancelled' and event.event_date and (event.event_date - today).days >= 7 %}
                     <form action="{{ url_for('events.cancel_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this event? This will notify the waitlist.');">
                         <button type="submit" class="btn" style="background-color: #f59e0b; color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer;">Cancel Event</button>
                     </form>
