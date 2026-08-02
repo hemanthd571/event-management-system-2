@@ -53,10 +53,22 @@ def create_app(config_class=Config):
             # Separate transaction for alter table to prevent transaction abort on error
             with conn.cursor() as cursor:
                 try:
-                    cursor.execute('ALTER TABLE venue_waitlist ADD COLUMN start_time TIME NULL, ADD COLUMN end_time TIME NULL, ADD COLUMN reserved_until TIMESTAMP NULL')
+                    cursor.execute('ALTER TABLE venue_waitlist ADD COLUMN start_time TIME NULL')
                     conn.commit()
                 except Exception:
-                    conn.rollback() # Columns likely already exist
+                    conn.rollback()
+                
+                try:
+                    cursor.execute('ALTER TABLE venue_waitlist ADD COLUMN end_time TIME NULL')
+                    conn.commit()
+                except Exception:
+                    conn.rollback()
+                    
+                try:
+                    cursor.execute('ALTER TABLE venue_waitlist ADD COLUMN reserved_until TIMESTAMP NULL')
+                    conn.commit()
+                except Exception:
+                    conn.rollback()
                     
             conn.close()
         except Exception as e:
