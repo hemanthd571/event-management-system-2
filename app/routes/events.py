@@ -160,7 +160,14 @@ def create():
                         flash(f"Failed to submit: Department Level events require a 1-hour gap. There is a clash with '{clash['title']}'.", 'danger')
                     else:
                         flash(f"Failed to submit proposal: There is a venue clash with '{clash['title']}' at this time!", 'danger')
-                    return redirect(url_for('events.create'))
+                    
+                    with conn.cursor() as cursor2:
+                        cursor2.execute('SELECT * FROM departments')
+                        from app.models_raw import Department
+                        departments_list = [Department(**d) for d in cursor2.fetchall()]
+                        cursor2.execute('SELECT * FROM venues')
+                        venues_list = cursor2.fetchall()
+                    return render_template('events/create.html', departments=departments_list, venues=venues_list, clash_info={'venue_id': venue_id, 'event_date': event_date})
 
                 cursor.execute('SELECT MAX(id) as max_id FROM events')
                 max_id_row = cursor.fetchone()
@@ -689,3 +696,95 @@ def submit_feedback(event_id):
         conn.close()
         
     return redirect(url_for('events.view', event_id=event_id))
+
+@events_bp.route('/join_waitlist', methods=['POST'])
+@login_required
+def join_waitlist():
+    venue_id = request.form.get('venue_id')
+    event_date = request.form.get('event_date')
+    if not venue_id or not event_date:
+        flash("Invalid waitlist request.", "danger")
+        return redirect(url_for('events.create'))
+        
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Check if already in waitlist
+            cursor.execute('SELECT * FROM venue_waitlist WHERE user_id = %s AND venue_id = %s AND event_date = %s', 
+                           (current_user.id, venue_id, event_date))
+            if cursor.fetchone():
+                flash("You are already on the waitlist for this venue on this date.", "info")
+            else:
+                cursor.execute('INSERT INTO venue_waitlist (user_id, venue_id, event_date) VALUES (%s, %s, %s)',
+                               (current_user.id, venue_id, event_date))
+                conn.commit()
+                flash("Successfully joined the waitlist! We will notify you if this slot becomes available.", "success")
+    except Exception as e:
+        flash(f"Error joining waitlist: {e}", "danger")
+    finally:
+        conn.close()
+        
+    return redirect(url_for('dashboard.index'))
+
+
+@events_bp.route('/cancel/<int:event_id>', methods=['POST'])
+@login_required
+def cancel_event(event_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT * FROM events WHERE id = %s', (event_id,))
+            event = cursor.fetchone()
+            
+            if not event:
+                abort(404)
+                
+            if event['organizer_id'] != current_user.id and not current_user.is_admin():
+                abort(403)
+                
+            if event['status'] == 'Cancelled':
+                flash("This event is already cancelled.", "warning")
+                return redirect(url_for('dashboard.index'))
+                
+            event_date = event['event_date']
+            from datetime import timedelta, date
+
+            
+            # Check 7-day cutoff rule
+            if event_date and (event_date - date.today()) < timedelta(days=7):
+                flash("You cannot cancel an event less than 7 days before it starts. Please contact an administrator.", "danger")
+                return redirect(url_for('dashboard.index'))
+                
+            # Cancel the event
+            cursor.execute('UPDATE events SET status = %s WHERE id = %s', ('Cancelled', event_id))
+            conn.commit()
+            flash("Event cancelled successfully.", "success")
+            
+            # Trigger Waitlist Notifications
+            cursor.execute('''SELECT vw.id, u.email, u.username, v.name as venue_name
+                              FROM venue_waitlist vw
+                              JOIN users u ON vw.user_id = u.id
+                              JOIN venues v ON vw.venue_id = v.id
+                              WHERE vw.venue_id = %s AND vw.event_date = %s AND vw.status = 'waiting'
+                           ''', (event['venue_id'], event_date))
+            waitlist_users = cursor.fetchall()
+            
+            for user in waitlist_users:
+                send_email_notification(
+                    user['email'],
+                    "Venue Slot Available!",
+                    f"Dear {user['username']},\n\nGood news! The venue '{user['venue_name']}' is now available on {event_date}. "
+                    "Since you are on the waitlist, you can now submit your event proposal for this date and venue.\n\n"
+                    "Note: This is a first-come, first-served notification. Please submit your proposal quickly."
+                )
+                cursor.execute('UPDATE venue_waitlist SET status = %s WHERE id = %s', ('notified', user['id']))
+            
+            if waitlist_users:
+                conn.commit()
+                
+    except Exception as e:
+        flash(f"Error cancelling event: {e}", "danger")
+    finally:
+        conn.close()
+        
+    return redirect(url_for('dashboard.index'))

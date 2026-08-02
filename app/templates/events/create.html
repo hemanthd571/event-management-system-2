@@ -4,6 +4,16 @@
 
 {% block content %}
 <div class="card">
+    {% if clash_info %}
+    <div style="background-color: #fff3cd; color: #856404; padding: 1rem; border: 1px solid #ffeeba; border-radius: 4px; margin-bottom: 1rem;">
+        <strong>Venue is already booked!</strong> This venue is not available on the selected date.
+        <form method="POST" action="{{ url_for('events.join_waitlist') }}" style="margin-top: 10px;">
+            <input type="hidden" name="venue_id" value="{{ clash_info.venue_id }}">
+            <input type="hidden" name="event_date" value="{{ clash_info.event_date }}">
+            <button type="submit" class="btn btn-warning">Join Waitlist for this Venue & Date</button>
+        </form>
+    </div>
+    {% endif %}
     <form method="POST" action="{{ url_for('events.create') }}" enctype="multipart/form-data">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
             

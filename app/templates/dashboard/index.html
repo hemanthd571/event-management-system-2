@@ -180,6 +180,13 @@
                 </td>
                 <td style="padding: 1rem 0; display: flex; gap: 0.5rem; align-items: center;">
                     <a href="{{ url_for('events.view', event_id=event.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">View</a>
+                    
+                    {% if event.status != 'Cancelled' and event.event_date and (event.event_date - today).days >= 7 %}
+                    <form action="{{ url_for('events.cancel_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this event? This will notify the waitlist.');">
+                        <button type="submit" class="btn" style="background-color: #f59e0b; color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer;">Cancel Event</button>
+                    </form>
+                    {% endif %}
+                    
                     {% if current_user.is_admin() %}
                     <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to completely delete this event? This action cannot be undone.');">
                         <button type="submit" class="btn" style="background-color: #ef4444; color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;"><i class="fas fa-trash-alt"></i> Delete</button>
@@ -247,6 +254,13 @@
                 </td>
                 <td style="padding: 1rem 0; display: flex; gap: 0.5rem; align-items: center;">
                     <a href="{{ url_for('events.view', event_id=event.id) }}" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">View</a>
+                    
+                    {% if event.status != 'Cancelled' and event.event_date and (event.event_date - today).days >= 7 %}
+                    <form action="{{ url_for('events.cancel_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this event? This will notify the waitlist.');">
+                        <button type="submit" class="btn" style="background-color: #f59e0b; color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer;">Cancel Event</button>
+                    </form>
+                    {% endif %}
+                    
                     {% if current_user.is_admin() %}
                     <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to completely delete this event? This action cannot be undone.');">
                         <button type="submit" class="btn" style="background-color: #ef4444; color: white; border: none; padding: 0.25rem 0.75rem; font-size: 0.875rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;"><i class="fas fa-trash-alt"></i> Delete</button>

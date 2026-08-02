@@ -101,7 +101,8 @@ def index():
         'chart_labels': chart_labels,
         'chart_data': chart_data,
         'cat_chart_labels': cat_chart_labels,
-        'cat_chart_data': cat_chart_data
+        'cat_chart_data': cat_chart_data,
+        'today': datetime.date.today()
     }
     return render_template('dashboard/index.html', **context)
 
