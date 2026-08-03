@@ -615,10 +615,15 @@ def register_event(event_id):
     try:
         with conn.cursor() as cursor:
             # Check if event exists and is Approved
-            cursor.execute('SELECT status FROM events WHERE id = %s', (event_id,))
+            cursor.execute('SELECT status, event_type, department_id FROM events WHERE id = %s', (event_id,))
             ev = cursor.fetchone()
             if not ev or ev['status'] != 'Approved':
                 flash('Cannot register for this event.', 'danger')
+                return redirect(url_for('events.view', event_id=event_id))
+                
+            # Department-level restriction
+            if ev['event_type'] == 'Department Level' and current_user.department_id != ev['department_id']:
+                flash('Only students from the organizing department can register for this Department Level event.', 'danger')
                 return redirect(url_for('events.view', event_id=event_id))
             
             # Check if already registered

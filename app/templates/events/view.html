@@ -113,10 +113,14 @@
                     </div>
                 {% else %}
                     {% if not user_registration %}
-                        <p>Register for this event to get your digital ticket!</p>
-                        <form action="{{ url_for('events.register_event', event_id=event.id) }}" method="POST">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Register Now</button>
-                        </form>
+                        {% if event.event_type == 'Department Level' and current_user.department_id != event.department_id %}
+                            <p class="text-danger"><i class="fas fa-lock"></i> Only students from the organizing department can register for this event.</p>
+                        {% else %}
+                            <p>Register for this event to get your digital ticket!</p>
+                            <form action="{{ url_for('events.register_event', event_id=event.id) }}" method="POST">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Register Now</button>
+                            </form>
+                        {% endif %}
                     {% else %}
                         {% if not user_registration.attended %}
                             <p style="color: var(--success);"><i class="fas fa-check-circle"></i> You are registered!</p>
