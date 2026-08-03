@@ -34,7 +34,7 @@
 
                 
                 {% if current_user.is_authenticated and current_user.id == event.organizer_id %}
-                <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn btn-warning"><i class="fas fa-edit"></i> Edit Event</a>
+                <!-- <a href="#" class="btn btn-warning"><i class="fas fa-edit"></i> Edit Event (Coming Soon)</a> -->
                 {% endif %}
                 
                 {% if event.status == 'Approved' and current_user.role in ['Admin', 'Faculty', 'HOD', 'Director', 'Pro VC', 'VC'] %}
