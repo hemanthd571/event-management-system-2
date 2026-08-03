@@ -17,9 +17,8 @@ def manage_users():
     try:
         with conn.cursor() as cursor:
             cursor.execute('''
-                SELECT u.*, r.name as role 
-                FROM users u 
-                LEFT JOIN roles r ON u.role_id = r.id
+                SELECT * 
+                FROM users 
             ''')
             for row in cursor.fetchall():
                 user = User(**row)
@@ -53,13 +52,9 @@ def create_user():
                     flash('Email already exists.', 'danger')
                     return redirect(url_for('admin.create_user'))
 
-                cursor.execute('SELECT id FROM roles WHERE name = %s', (role,))
-                role_row = cursor.fetchone()
-                role_id = role_row['id'] if role_row else 2
-
                 cursor.execute(
-                    'INSERT INTO users (username, email, password_hash, role_id, department_id) VALUES (%s, %s, %s, %s, %s)',
-                    (username, email, generate_password_hash(password), role_id, department_id if department_id else None)
+                    'INSERT INTO users (username, email, password_hash, role, department_id) VALUES (%s, %s, %s, %s, %s)',
+                    (username, email, generate_password_hash(password), role, department_id if department_id else None)
                 )
                 conn.commit()
                 flash('User created successfully.', 'success')
@@ -134,17 +129,13 @@ def edit_user(user_id):
                 # Check admin override
                 final_role = user.role if user.username == 'admin' else role
                 
-                cursor.execute('SELECT id FROM roles WHERE name = %s', (final_role,))
-                role_row = cursor.fetchone()
-                role_id = role_row['id'] if role_row else 2
-
                 if password:
                     pwd_hash = generate_password_hash(password)
-                    cursor.execute('''UPDATE users SET username=%s, email=%s, role_id=%s, department_id=%s, password_hash=%s WHERE id=%s''',
-                                   (username, email, role_id, department_id if department_id else None, pwd_hash, user_id))
+                    cursor.execute('''UPDATE users SET username=%s, email=%s, role=%s, department_id=%s, password_hash=%s WHERE id=%s''',
+                                   (username, email, final_role, department_id if department_id else None, pwd_hash, user_id))
                 else:
-                    cursor.execute('''UPDATE users SET username=%s, email=%s, role_id=%s, department_id=%s WHERE id=%s''',
-                                   (username, email, role_id, department_id if department_id else None, user_id))
+                    cursor.execute('''UPDATE users SET username=%s, email=%s, role=%s, department_id=%s WHERE id=%s''',
+                                   (username, email, final_role, department_id if department_id else None, user_id))
                 
                 conn.commit()
                 flash(f'User {username} updated successfully.', 'success')
