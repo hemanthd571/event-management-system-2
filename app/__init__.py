@@ -26,6 +26,12 @@ def create_app(config_class=Config):
     app.register_blueprint(events_bp)
     app.register_blueprint(admin_bp)
     
+    @app.errorhandler(500)
+    def internal_error(error):
+        import traceback
+        tb = traceback.format_exc()
+        return f"<h1>Internal Server Error</h1><p>Please take a screenshot of this error and share it so we can fix the bug:</p><pre style='background:#f4f4f4;padding:10px;border:1px solid #ccc;overflow:auto;white-space:pre-wrap;'>{tb}</pre>", 500
+    
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
     with app.app_context():
