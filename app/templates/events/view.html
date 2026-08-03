@@ -37,7 +37,7 @@
                 <!-- <a href="#" class="btn btn-warning"><i class="fas fa-edit"></i> Edit Event (Coming Soon)</a> -->
                 {% endif %}
                 
-                {% if event.status == 'Approved' and current_user.role in ['Admin', 'Faculty', 'HOD', 'Director', 'Pro VC', 'VC'] %}
+                {% if event.status == 'Approved' and (current_user.role in ['Admin', 'Faculty', 'HOD', 'Director', 'Pro VC', 'VC'] or current_user.id|int == event.organizer_id|int) %}
                 <a href="{{ url_for('events.download_pdf', event_id=event.id) }}" class="btn btn-primary"><i class="fas fa-certificate"></i> Download Certificate</a>
                 {% endif %}
                 
