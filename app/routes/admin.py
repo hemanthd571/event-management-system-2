@@ -5,6 +5,7 @@ from app.dal import get_db_connection, get_user_by_id, get_user_by_email, get_de
 from app.models_raw import User, Department
 from werkzeug.security import generate_password_hash
 import pymysql
+import datetime
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -53,8 +54,8 @@ def create_user():
                     return redirect(url_for('admin.create_user'))
 
                 cursor.execute(
-                    'INSERT INTO users (username, email, password_hash, role, department_id) VALUES (%s, %s, %s, %s, %s)',
-                    (username, email, generate_password_hash(password), role, department_id if department_id else None)
+                    'INSERT INTO users (username, email, password_hash, role, department_id, is_active, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                    (username, email, generate_password_hash(password), role, department_id if department_id else None, 1, datetime.datetime.now())
                 )
                 conn.commit()
                 flash('User created successfully.', 'success')
